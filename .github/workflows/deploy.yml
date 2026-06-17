@@ -1,0 +1,42 @@
+name: Deploy (Cloudflare Pages)
+
+# Cloudflare Pages also auto-deploys on push when the repo is connected in the
+# dashboard (§8.3). This workflow is the explicit, reproducible path.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Sync canonical schemas into the client
+        run: node scripts/sync-schemas.mjs
+
+      - name: Install
+        run: npm ci
+        working-directory: client
+
+      - name: Build
+        run: npm run build
+        working-directory: client
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Adjust the project name to match your Cloudflare Pages project.
+          command: pages deploy client/.svelte-kit/cloudflare --project-name=bike-parts-db

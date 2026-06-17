@@ -1,0 +1,26 @@
+{
+  "type_id": "chain",
+  "label": "Chain",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "width",
+      "label": "Width",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "options": ["1/8\" (single-speed / track)", "3/32\" (6–12 speed derailleur)"]
+    },
+    {
+      "id": "speed",
+      "label": "Speed",
+      "type": "select",
+      "searchable": true,
+      "hint": "Leave blank for single-speed / track",
+      "options": ["6", "7", "8", "9", "10", "11", "12"]
+    },
+    { "id": "links", "label": "Link count", "type": "number", "inputmode": "numeric" },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

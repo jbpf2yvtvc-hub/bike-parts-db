@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+client/.svelte-kit/
+client/build/
+client/.vercel/
+client/.cloudflare/
+.output/
+dist/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# PocketBase
+server/pb_data/
+server/pocketbase
+server/pocketbase.exe
+
+# Test / tooling
+client/test-results/
+client/playwright-report/
+client/.playwright/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp

@@ -1,0 +1,32 @@
+{
+  "type_id": "frame",
+  "label": "Frame",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "material",
+      "label": "Material",
+      "type": "select",
+      "searchable": true,
+      "options": ["steel", "aluminum", "titanium", "carbon", "other"]
+    },
+    { "id": "size", "label": "Size", "type": "text", "searchable": true, "hint": "e.g. 54cm, M, L" },
+    { "id": "color", "label": "Colour", "type": "text", "searchable": true },
+    {
+      "id": "wheel_size",
+      "label": "Wheel size",
+      "type": "select",
+      "searchable": true,
+      "options": ["700c", "650b", "29\"", "27.5\"", "26\"", "24\"", "20\""]
+    },
+    {
+      "id": "dropout",
+      "label": "Rear dropout",
+      "type": "select",
+      "options": ["vertical", "horizontal", "track", "sliding"]
+    },
+    { "id": "serial", "label": "Serial number", "type": "text" },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

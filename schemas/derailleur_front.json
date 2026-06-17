@@ -1,0 +1,24 @@
+{
+  "type_id": "derailleur_front",
+  "label": "Front derailleur",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "mount",
+      "label": "Mount",
+      "type": "select",
+      "searchable": true,
+      "options": ["braze-on", "clamp 28.6mm", "clamp 31.8mm", "clamp 34.9mm"]
+    },
+    { "id": "pull", "label": "Cable pull", "type": "select", "options": ["top pull", "bottom pull", "dual pull"] },
+    {
+      "id": "max_chainrings",
+      "label": "Max chainrings",
+      "type": "select",
+      "options": ["2", "3"]
+    },
+    { "id": "max_tooth", "label": "Max chainring teeth", "type": "number", "inputmode": "numeric" },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

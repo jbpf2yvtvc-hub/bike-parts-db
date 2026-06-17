@@ -1,0 +1,38 @@
+{
+  "type_id": "shifter",
+  "label": "Shifter",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "hand",
+      "label": "Hand",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "hint": "Left = front, right = rear",
+      "options": ["left", "right"]
+    },
+    {
+      "id": "speed",
+      "label": "Speed",
+      "type": "select",
+      "searchable": true,
+      "options": ["1", "6", "7", "8", "9", "10", "11", "12"]
+    },
+    {
+      "id": "style",
+      "label": "Style",
+      "type": "select",
+      "searchable": true,
+      "options": ["trigger", "thumb", "twist/grip", "drop-bar brifter", "downtube", "bar-end", "friction"]
+    },
+    {
+      "id": "mount",
+      "label": "Mount",
+      "type": "select",
+      "options": ["flat bar clamp", "drop bar", "downtube boss", "bar-end"]
+    },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

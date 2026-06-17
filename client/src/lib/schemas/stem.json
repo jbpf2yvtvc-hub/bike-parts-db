@@ -1,0 +1,26 @@
+{
+  "type_id": "stem",
+  "label": "Stem",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "style",
+      "label": "Style",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "hint": "Quill for threaded forks, clamp-on for threadless",
+      "options": ["quill (threaded)", "threadless clamp-on"]
+    },
+    { "id": "length_mm", "label": "Length (mm)", "type": "number", "inputmode": "numeric" },
+    {
+      "id": "clamp_diameter",
+      "label": "Bar clamp diameter",
+      "type": "select",
+      "options": ["25.4mm", "26.0mm", "31.8mm", "35.0mm"]
+    },
+    { "id": "angle_deg", "label": "Angle (°)", "type": "number", "inputmode": "numeric" },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

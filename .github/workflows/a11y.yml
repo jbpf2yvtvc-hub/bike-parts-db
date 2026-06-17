@@ -1,0 +1,40 @@
+name: a11y (axe-core)
+
+# Runs axe-core via Playwright on every route and fails the build on any
+# violation (§3.2, step 19). By default it builds + previews the app locally;
+# set PLAYWRIGHT_TEST_BASE_URL to point at a deployed preview URL instead.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Sync canonical schemas into the client
+        run: node scripts/sync-schemas.mjs
+
+      - name: Install
+        run: npm ci
+        working-directory: client
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: client
+
+      - name: Run axe-core a11y tests
+        run: npm run test:a11y
+        working-directory: client
+        env:
+          # Build/preview needs these at runtime; they are not secrets for a11y.
+          POCKETBASE_URL: http://127.0.0.1:8090
+          SESSION_SECRET: ci-placeholder-secret-at-least-32-characters

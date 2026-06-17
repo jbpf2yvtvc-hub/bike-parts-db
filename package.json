@@ -1,0 +1,21 @@
+{
+  "name": "bike-parts-db",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal bicycle parts inventory + interactive Build Checklist",
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix client run dev",
+    "build": "npm run sync:schemas && npm --prefix client run build",
+    "preview": "npm --prefix client run preview",
+    "check": "npm --prefix client run check",
+    "lint": "npm --prefix client run lint",
+    "test:a11y": "npm --prefix client run test:a11y",
+    "sync:schemas": "node scripts/sync-schemas.mjs",
+    "pb": "bash scripts/run-pb.sh",
+    "setup": "npm install --prefix client && npm run sync:schemas"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

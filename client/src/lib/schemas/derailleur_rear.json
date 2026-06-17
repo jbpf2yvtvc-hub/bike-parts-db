@@ -1,0 +1,23 @@
+{
+  "type_id": "derailleur_rear",
+  "label": "Rear derailleur",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "speed",
+      "label": "Speed",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "hint": "Number of rear sprockets",
+      "options": ["6", "7", "8", "9", "10", "11", "12"]
+    },
+    { "id": "clutch", "label": "Clutch", "type": "boolean", "hint": "Has a chain-stabilising clutch" },
+    { "id": "max_cog", "label": "Max cog (teeth)", "type": "number", "inputmode": "numeric" },
+    { "id": "total_capacity", "label": "Total capacity (teeth)", "type": "number", "inputmode": "numeric" },
+    { "id": "cage_length", "label": "Cage length", "type": "select", "options": ["short", "medium", "long"] },
+    { "id": "mount", "label": "Mount", "type": "select", "options": ["standard hanger", "direct mount"] },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

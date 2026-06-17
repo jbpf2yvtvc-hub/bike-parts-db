@@ -1,0 +1,23 @@
+{
+  "type_id": "chain_tensioner",
+  "label": "Chain tensioner",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "mount",
+      "label": "Mount",
+      "type": "select",
+      "searchable": true,
+      "options": ["derailleur hanger", "bolt-on", "horizontal dropout"]
+    },
+    {
+      "id": "chain_width",
+      "label": "Chain width",
+      "type": "select",
+      "searchable": true,
+      "options": ["1/8\"", "3/32\""]
+    },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

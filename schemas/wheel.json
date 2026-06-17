@@ -1,0 +1,71 @@
+{
+  "type_id": "wheel",
+  "label": "Wheel",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "position",
+      "label": "Position",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "options": ["front", "rear"]
+    },
+    {
+      "id": "brake_type",
+      "label": "Brake type",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "options": ["rim", "disc", "rim and disc"]
+    },
+    {
+      "id": "freehub_standard",
+      "label": "Freehub / hub standard",
+      "type": "select",
+      "searchable": true,
+      "hint": "Rear wheels only — determines compatible cassette speeds",
+      "options": [
+        "Shimano HG",
+        "Shimano HG 11 (road)",
+        "Shimano Micro Spline",
+        "SRAM XD",
+        "SRAM XDR",
+        "Campagnolo",
+        "Single-speed freewheel",
+        "Track",
+        "Flip-flop"
+      ]
+    },
+    {
+      "id": "speed_capacity",
+      "label": "Speed capacity",
+      "type": "select",
+      "searchable": true,
+      "options": ["1", "6", "7", "8", "9", "10", "11", "12"]
+    },
+    {
+      "id": "axle_standard",
+      "label": "Axle standard",
+      "type": "select",
+      "options": [
+        "QR 100mm (front)",
+        "QR 130mm (rear road)",
+        "QR 135mm (rear MTB)",
+        "thru-axle 12x100",
+        "thru-axle 15x100",
+        "thru-axle 12x142",
+        "thru-axle 12x148 Boost",
+        "track 10mm nutted"
+      ]
+    },
+    {
+      "id": "wheel_size",
+      "label": "Wheel size",
+      "type": "select",
+      "options": ["700c", "650b", "29\"", "27.5\"", "26\"", "24\"", "20\""]
+    },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}
