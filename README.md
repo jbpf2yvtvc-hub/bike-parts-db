@@ -99,9 +99,13 @@ Cloudflare Pages dashboard.
 
 The app uses `@sveltejs/adapter-cloudflare`. Connect the repo in the Cloudflare
 Pages dashboard (build output `client/.svelte-kit/cloudflare`), or use
-`.github/workflows/deploy.yml` (needs `CLOUDFLARE_API_TOKEN` and
-`CLOUDFLARE_ACCOUNT_ID` repo secrets). Set `POCKETBASE_URL` and `SESSION_SECRET`
-in the Pages environment variables (no `VITE_` prefix).
+`.github/workflows/deploy.yml`. That workflow **skips itself (and passes) until
+the Cloudflare secrets are present**, so it won't show failing runs before
+you've set things up. To enable CI deploys, add `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` in **Settings → Secrets and variables → Actions**, and
+create a Pages project named `bike-parts-db` (or edit the `--project-name` in
+the workflow). Set `POCKETBASE_URL` and `SESSION_SECRET` in the Pages
+environment variables (no `VITE_` prefix).
 
 ### Backend — PocketBase on Railway (or Render)
 
