@@ -145,6 +145,8 @@
           <select name="bar" bind:value={config.bar} onchange={onConfigChange} class="mt-1 w-full min-h-[44px] rounded border border-border bg-surface-2 px-2">
             <option value="flat">flat</option>
             <option value="drop">drop</option>
+            <option value="cruiser">cruiser/multi-position</option>
+            <option value="alt">alt bars</option>
           </select>
         </label>
         <label class="block text-xs">
@@ -298,7 +300,7 @@
                    "supports at least N speeds". The selects belong to the
                    configurator form (form="configurator") so they persist with
                    the rest of the config, with no JS too. -->
-              {#if key === 'shifting::left-shifter'}
+              {#if key === 'drivetrain::left-shifter'}
                 <label class="mt-3 flex items-center gap-2 text-sm">
                   <span class="text-ink-muted">Front shifting</span>
                   <select
@@ -312,7 +314,7 @@
                     <option value="friction">friction</option>
                   </select>
                 </label>
-              {:else if key === 'shifting::right-shifter' && config.rear_speeds !== '1'}
+              {:else if key === 'drivetrain::right-shifter' && config.rear_speeds !== '1'}
                 <label class="mt-3 flex items-center gap-2 text-sm">
                   <span class="text-ink-muted">Rear shifting</span>
                   <select

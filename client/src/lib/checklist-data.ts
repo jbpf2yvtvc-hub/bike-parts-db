@@ -13,7 +13,7 @@
  */
 
 export type ForkAxis = 'threaded' | 'threadless';
-export type BarAxis = 'flat' | 'drop';
+export type BarAxis = 'flat' | 'drop' | 'cruiser' | 'alt';
 export type BrakeAxis = 'canti' | 'vbrake' | 'cp' | 'disc-short' | 'disc-long';
 export type Chainrings = '1' | '2' | '3';
 export type RearSpeeds = '1' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
@@ -121,7 +121,13 @@ export const SECTIONS: ChecklistSection[] = [
     title: 'Handlebar',
     items: [
       { id: 'handlebar-flat', t: 'Handlebar — flat', visible: (cfg) => cfg.bar === 'flat' },
-      { id: 'handlebar-drop', t: 'Handlebar — drop', visible: (cfg) => cfg.bar === 'drop' }
+      { id: 'handlebar-drop', t: 'Handlebar — drop', visible: (cfg) => cfg.bar === 'drop' },
+      {
+        id: 'handlebar-cruiser',
+        t: 'Handlebar — cruiser/multi-position',
+        visible: (cfg) => cfg.bar === 'cruiser'
+      },
+      { id: 'handlebar-alt', t: 'Handlebar — alt bars', visible: (cfg) => cfg.bar === 'alt' }
     ]
   },
   {
@@ -153,6 +159,17 @@ export const SECTIONS: ChecklistSection[] = [
     id: 'drivetrain',
     title: 'Drivetrain',
     items: [
+      // Shifters first — friction/indexed choice here affects which
+      // derailleurs are offered below.
+      {
+        id: 'left-shifter',
+        t: 'Left shifter (front)',
+        visible: hasFront
+      },
+      {
+        id: 'right-shifter',
+        t: 'Right shifter (rear)'
+      },
       {
         id: 'front-derailleur',
         t: 'Front derailleur',
@@ -185,21 +202,6 @@ export const SECTIONS: ChecklistSection[] = [
         id: 'chain-tensioner',
         t: 'Chain tensioner',
         visible: (cfg) => cfg.rear_speeds === '1' && cfg.tension === 'tensioner'
-      }
-    ]
-  },
-  {
-    id: 'shifting',
-    title: 'Shifting',
-    items: [
-      {
-        id: 'left-shifter',
-        t: 'Left shifter (front)',
-        visible: hasFront
-      },
-      {
-        id: 'right-shifter',
-        t: 'Right shifter (rear)'
       }
     ]
   },

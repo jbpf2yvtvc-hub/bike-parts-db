@@ -29,17 +29,19 @@ const ITEM_TYPE: Record<string, string> = {
   'stem::stem-threadless': 'stem',
   'bars::handlebar-flat': 'handlebar',
   'bars::handlebar-drop': 'handlebar',
+  'bars::handlebar-cruiser': 'handlebar',
+  'bars::handlebar-alt': 'handlebar',
   'bb::bottom-bracket': 'bottom_bracket',
   'bb::eccentric-bb': 'eccentric_bb',
   'bb::crankset': 'crankset',
+  'drivetrain::left-shifter': 'shifter',
+  'drivetrain::right-shifter': 'shifter',
   'drivetrain::front-derailleur': 'derailleur_front',
   'drivetrain::rear-derailleur': 'derailleur_rear',
   'drivetrain::cassette': 'cassette',
   'drivetrain::chain': 'chain',
   'drivetrain::cog': 'cog',
   'drivetrain::chain-tensioner': 'chain_tensioner',
-  'shifting::left-shifter': 'shifter',
-  'shifting::right-shifter': 'shifter',
   'brakes::caliper-canti': 'brake_caliper',
   'brakes::caliper-vbrake': 'brake_caliper',
   'brakes::caliper-cp': 'brake_caliper',
@@ -87,6 +89,10 @@ export function getCompatibilityFilter(
       return "type_id='handlebar' && attributes.style~'flat'";
     case 'bars::handlebar-drop':
       return "type_id='handlebar' && attributes.style~'drop'";
+    case 'bars::handlebar-cruiser':
+      return "type_id='handlebar' && attributes.style~'cruiser'";
+    case 'bars::handlebar-alt':
+      return "type_id='handlebar' && attributes.style~'alt'";
 
     case 'bb::bottom-bracket':
       return "type_id='bottom_bracket'";
@@ -118,9 +124,9 @@ export function getCompatibilityFilter(
     case 'drivetrain::chain-tensioner':
       return "type_id='chain_tensioner'";
 
-    case 'shifting::left-shifter':
+    case 'drivetrain::left-shifter':
       return "type_id='shifter' && attributes.hand='left'";
-    case 'shifting::right-shifter':
+    case 'drivetrain::right-shifter':
       return "type_id='shifter' && attributes.hand='right'";
 
     case 'brakes::caliper-canti':

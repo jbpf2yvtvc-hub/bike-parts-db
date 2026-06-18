@@ -28,7 +28,7 @@ export async function getOrCreateProgress(pb: PocketBase, bikeId: string, ownerI
 }
 
 const FORKS: ForkAxis[] = ['threaded', 'threadless'];
-const BARS: BarAxis[] = ['flat', 'drop'];
+const BARS: BarAxis[] = ['flat', 'drop', 'cruiser', 'alt'];
 const BRAKES: BrakeAxis[] = ['canti', 'vbrake', 'cp', 'disc-short', 'disc-long'];
 const CHAINRINGS: Chainrings[] = ['1', '2', '3'];
 const REAR_SPEEDS: RearSpeeds[] = ['1', '6', '7', '8', '9', '10', '11', '12'];

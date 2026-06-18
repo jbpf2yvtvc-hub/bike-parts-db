@@ -212,7 +212,7 @@ Key compatibility-bearing fields (must match the filter table in §9.5 exactly):
 - `fork.brake_mount`: `boss (canti/V-brake)` | `disc IS` | `disc PM` | `none`
 - `headset.standard`: `threaded` | `threadless EC` | `threadless ZS` | `threadless IS` | `threadless taper`
 - `stem.style`: `quill (threaded)` | `threadless clamp-on`
-- `handlebar.style`: `flat` | `drop` | `bullhorn` | `riser` | `moustache`
+- `handlebar.style`: `flat` | `drop` | `bullhorn` | `riser` | `moustache` | `cruiser/multi-position` | `alt bars`
 - `crankset.chainring_count`: `1` | `2` | `3`  *(plus `bcd_outer`, `bcd_inner` numbers)*
 - `derailleur_rear.speed`, `cassette.speed`, `chain.speed`: `6`–`12`
 - `derailleur_rear`: `clutch` (bool), `max_cog` (number), `total_capacity` (number)
@@ -372,7 +372,7 @@ Each item carries a **stable `id`** (kebab-case, unique within its section). The
 | Axis | UI label | Values | Default | Visible when |
 |---|---|---|---|---|
 | `fork` | Steerer / stem | `threaded`, `threadless` | `threaded` | always |
-| `bar` | Handlebar type | `flat`, `drop` | `flat` | always |
+| `bar` | Handlebar type | `flat`, `drop`, `cruiser`, `alt` | `flat` | always |
 | `brake` | Brake type | `canti`, `vbrake`, `cp`, `disc-short`, `disc-long` | `canti` | always |
 | `chainrings` | Chainrings at crank | `1`, `2`, `3` | `2` | always |
 | `rear_speeds` | Speeds at rear | `1`, `6`, `7`, `8`, `9`, `10`, `11`, `12` | `10` | always |
@@ -430,10 +430,12 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 | `drivetrain::chain` | `rear_speeds:1` | `type_id='chain' && attributes.width~'1/8'` | — |
 | `drivetrain::cog` | `rear_speeds:1` | `type_id='cog'` | — |
 | `drivetrain::chain-tensioner` | `rear_speeds:1 && tension:tensioner` | `type_id='chain_tensioner'` | — |
-| `shifting::left-shifter` | `chainrings:2\|3` | `type_id='shifter' && attributes.hand='left'` | — |
-| `shifting::right-shifter` | always | `type_id='shifter' && attributes.hand='right'` | — |
+| `drivetrain::left-shifter` | `chainrings:2\|3` | `type_id='shifter' && attributes.hand='left'` | — |
+| `drivetrain::right-shifter` | always | `type_id='shifter' && attributes.hand='right'` | — |
 | `bars::handlebar-flat` | `bar:flat` | `type_id='handlebar' && attributes.style~'flat'` | — |
 | `bars::handlebar-drop` | `bar:drop` | `type_id='handlebar' && attributes.style~'drop'` | — |
+| `bars::handlebar-cruiser` | `bar:cruiser` | `type_id='handlebar' && attributes.style~'cruiser'` | — |
+| `bars::handlebar-alt` | `bar:alt` | `type_id='handlebar' && attributes.style~'alt'` | — |
 | `brakes::caliper-canti` | `brake:canti` | `type_id='brake_caliper' && attributes.style~'cantilever'` | — |
 | `brakes::caliper-vbrake` | `brake:vbrake` | `type_id='brake_caliper' && attributes.style~'v-brake'` | — |
 | `brakes::caliper-cp` | `brake:cp` | `type_id='brake_caliper' && attributes.style~'center-pull'` | — |
@@ -452,7 +454,7 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 
 **Two-step filtering** (used where a row has a post-fetch filter): PocketBase cannot run the freehub matrix, so the server first queries by `type_id`/attributes, then applies the TS predicate in the SvelteKit `load()` before rendering. This is fine at personal-inventory scale (hundreds of parts). At very large scale it would need denormalising; see §11 risks.
 
-**Shifting mode (friction vs indexed).** The config carries `front_shifting` and `rear_shifting` (`indexed` | `friction`), surfaced as selects on the left/right shifter items in the shifting section (they belong to the configurator form via the `form` attribute, so they persist with the rest of the config, no-JS too). **Indexed** requires an exact speed match (rear derailleur `speed = rear_speeds`; front derailleur `max_chainrings = chainrings`). **Friction** relaxes this to "supports *at least* that many" via a post-fetch numeric predicate — e.g. a 9-speed rear derailleur is offered for a 7-speed build, and a triple front derailleur for a double. Auto-link (`matchItemForPart`) uses the same filters.
+**Shifting mode (friction vs indexed).** The config carries `front_shifting` and `rear_shifting` (`indexed` | `friction`), surfaced as selects on the left/right shifter items, which live at the top of the Drivetrain section (above the derailleurs they constrain; they belong to the configurator form via the `form` attribute, so they persist with the rest of the config, no-JS too). **Indexed** requires an exact speed match (rear derailleur `speed = rear_speeds`; front derailleur `max_chainrings = chainrings`). **Friction** relaxes this to "supports *at least* that many" via a post-fetch numeric predicate — e.g. a 9-speed rear derailleur is offered for a 7-speed build, and a triple front derailleur for a double. Auto-link (`matchItemForPart`) uses the same filters.
 
 **Frame-driven seatpost item.** The linked frame's `integrated_seatpost_clamp` attribute decides the seatpost section: when **false** the list shows **Seatpost clamp (collar)** (`seatpost::seatpost-clamp`, links to a `seatpost_clamp` part); when **true** it instead shows **Binder bolt (standard or QR)** (`seatpost::binder-bolt`, a check-off item with no picker, since a binder bolt isn't tracked as inventory). This is threaded into item visibility via a `ChecklistContext` derived from the build's frame.
 

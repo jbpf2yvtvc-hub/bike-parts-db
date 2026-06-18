@@ -10,7 +10,7 @@
       "type": "select",
       "required": true,
       "searchable": true,
-      "options": ["flat", "drop", "bullhorn", "riser", "moustache"]
+      "options": ["flat", "drop", "bullhorn", "riser", "moustache", "cruiser/multi-position", "alt bars"]
     },
     { "id": "width_mm", "label": "Width (mm)", "type": "number", "inputmode": "numeric" },
     {
