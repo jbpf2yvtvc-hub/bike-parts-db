@@ -21,10 +21,10 @@
   --color-donate: #60a5fa;
   --color-unknown: #c2c2c2;
 
-  /* Headings use Jost — a free, geometric Futura-style face. Both heading
-     vars resolve to it for a consistent display voice across the app. */
-  --font-display: 'Jost', system-ui, sans-serif;
-  --font-condensed: 'Jost', system-ui, sans-serif;
+  /* Headings use Montserrat — a free, geometric face close to Proxima Nova.
+     Both heading vars resolve to it for a consistent display voice. */
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-condensed: 'Montserrat', system-ui, sans-serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
