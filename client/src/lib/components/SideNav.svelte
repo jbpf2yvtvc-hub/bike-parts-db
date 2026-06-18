@@ -8,7 +8,7 @@
   class="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-border bg-surface p-4 lg:flex"
   aria-label="Primary"
 >
-  <a href="/" class="mb-6 block font-display text-2xl tracking-wide text-accent">
+  <a href="/" class="mb-6 block font-display text-2xl uppercase tracking-wide text-accent">
     Bike Parts DB
   </a>
   <ul class="flex flex-col gap-1">

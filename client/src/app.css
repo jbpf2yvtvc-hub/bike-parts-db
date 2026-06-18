@@ -21,10 +21,10 @@
   --color-donate: #60a5fa;
   --color-unknown: #c2c2c2;
 
-  /* Headings use Space Grotesk — geometric but not too round. Both heading
+  /* Headings use Jost — a free, geometric Futura-style face. Both heading
      vars resolve to it for a consistent display voice across the app. */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-condensed: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Jost', system-ui, sans-serif;
+  --font-condensed: 'Jost', system-ui, sans-serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -48,8 +48,8 @@ body {
   color: var(--color-ink);
 }
 
-/* Headings use the geometric display face app-wide, with slight negative
-   tracking for a tighter, more geometric feel. */
+/* Headings use the geometric display face app-wide, set in all-caps with a
+   little positive tracking (which reads better in uppercase). */
 h1,
 h2,
 h3,
@@ -58,7 +58,8 @@ h5,
 h6 {
   font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Native <details> disclosure: hide default markers (we supply a chevron) and

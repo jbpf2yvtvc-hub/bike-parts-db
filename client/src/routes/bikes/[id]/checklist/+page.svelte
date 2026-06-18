@@ -27,12 +27,13 @@
   onMount(() => (mounted = true));
 
   const bikeId = untrack(() => data.bike.id);
-  const partLinks = $derived(data.partLinks as Record<string, string>);
-  const linkedParts = $derived(data.linkedParts as Record<string, any>);
+  // Effective per-item links (manual + parts auto-linked because they're
+  // installed on this bike); keyed by item key.
+  const links = $derived(data.links as Record<string, any>);
 
   // A linked part auto-checks its item, so an item counts as done ("installed")
   // when it is either manually checked or has a linked part.
-  const isLinked = (key: string): boolean => !!linkedParts[partLinks[key]];
+  const isLinked = (key: string): boolean => !!links[key];
   const isDone = (key: string): boolean => checked.has(key) || isLinked(key);
 
   // View filter: All / Installed (done) / Needed (not done).
@@ -256,7 +257,7 @@
           {#each shownItems as item (item.id)}
             {@const key = itemKey(section.id, item.id)}
             {@const note = getDynamicNote(item, config)}
-            {@const linked = linkedParts[partLinks[key]]}
+            {@const linked = links[key]}
             {@const linkNoteId = key.replace('::', '--') + '-linknote'}
             <li class="rounded-lg border border-border bg-surface p-4">
               <label class="flex items-start gap-3">
@@ -278,7 +279,9 @@
                   </span>
                   {#if linked}
                     <span id={linkNoteId} class="mt-1 block text-xs text-ink-muted">
-                      Auto-checked — a part is linked. Unlink it to edit this item.
+                      {linked.source === 'bike'
+                        ? 'Auto-checked — this part is installed on this bike.'
+                        : 'Auto-checked — a part is linked. Unlink it to edit this item.'}
                     </span>
                   {/if}
                   {#if note}<span class="mt-1 block text-sm text-ink-muted">{note}</span>{/if}
@@ -294,14 +297,23 @@
                     <p class="mt-1 flex items-center gap-1 text-ink-muted">
                       <MapPin size={14} aria-hidden="true" /> {linkStatus(linked)}
                     </p>
-                    <div class="mt-2 flex flex-wrap gap-3">
-                      <a href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(key)}`} class="text-accent underline">Change</a>
-                      <!-- formaction overrides the enclosing form's action, so no
-                           nested <form> is needed (invalid HTML). -->
-                      <button type="submit" formaction="?/unlinkPart" name="key" value={key} class="text-ink-muted underline">
-                        Unlink
-                      </button>
-                    </div>
+                    {#if linked.source === 'bike'}
+                      <!-- Auto-linked from the bike assignment: can't be unlinked
+                           here; change the part's bike to remove it. -->
+                      <div class="mt-2 flex flex-wrap gap-3">
+                        <a href={`/parts/${linked.id}`} class="text-accent underline">View part</a>
+                        <a href={`/parts/${linked.id}/edit`} class="text-ink-muted underline">Edit / reassign bike</a>
+                      </div>
+                    {:else}
+                      <div class="mt-2 flex flex-wrap gap-3">
+                        <a href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(key)}`} class="text-accent underline">Change</a>
+                        <!-- formaction overrides the enclosing form's action, so no
+                             nested <form> is needed (invalid HTML). -->
+                        <button type="submit" formaction="?/unlinkPart" name="key" value={key} class="text-ink-muted underline">
+                          Unlink
+                        </button>
+                      </div>
+                    {/if}
                   {:else}
                     <a
                       href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(key)}`}

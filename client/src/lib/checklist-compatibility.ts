@@ -15,7 +15,7 @@
  * strings in schemas/*.json. Keep the two in sync — a mismatch silently yields
  * empty pickers (§11 risk).
  */
-import type { ChecklistConfig } from './checklist-data';
+import { visibleItemKeys, type ChecklistConfig } from './checklist-data';
 import { freehubCompatible } from './freehub-compatibility';
 import type { PartRecord } from './types';
 
@@ -196,4 +196,96 @@ export function classifyPart(
   }
 
   return 'compatible';
+}
+
+/**
+ * Minimal evaluator for the subset of PocketBase filter syntax that
+ * `getCompatibilityFilter` produces: comparisons (`field='v'` / `field~'v'`)
+ * over `type_id` and `attributes.<name>`, combined with `&&`, `||`, and
+ * parentheses. Evaluating the generated string (rather than duplicating the
+ * logic) keeps a single source of truth for compatibility (§11 risk).
+ */
+function evalFilter(filter: string, part: PartRecord): boolean {
+  let i = 0;
+  const s = filter;
+  const ws = () => {
+    while (i < s.length && s[i] === ' ') i++;
+  };
+
+  const parseComparison = (): boolean => {
+    ws();
+    let start = i;
+    while (i < s.length && s[i] !== '=' && s[i] !== '~') i++;
+    const field = s.slice(start, i).trim();
+    const op = s[i];
+    i++; // consume operator
+    ws();
+    // value is single-quoted
+    i++; // opening quote
+    start = i;
+    while (i < s.length && s[i] !== "'") i++;
+    const value = s.slice(start, i);
+    i++; // closing quote
+
+    let actual: string;
+    if (field === 'type_id') actual = String(part.type_id ?? '');
+    else if (field.startsWith('attributes.')) {
+      const raw = part.attributes?.[field.slice('attributes.'.length)];
+      actual = raw == null ? '' : String(raw);
+    } else actual = '';
+
+    return op === '='
+      ? actual === value
+      : actual.toLowerCase().includes(value.toLowerCase());
+  };
+
+  const parsePrimary = (): boolean => {
+    ws();
+    if (s[i] === '(') {
+      i++; // (
+      const v = parseOr();
+      ws();
+      if (s[i] === ')') i++;
+      return v;
+    }
+    return parseComparison();
+  };
+
+  function parseAnd(): boolean {
+    let v = parsePrimary();
+    ws();
+    while (s.startsWith('&&', i)) {
+      i += 2;
+      v = parsePrimary() && v;
+      ws();
+    }
+    return v;
+  }
+
+  function parseOr(): boolean {
+    let v = parseAnd();
+    ws();
+    while (s.startsWith('||', i)) {
+      i += 2;
+      v = parseAnd() || v;
+      ws();
+    }
+    return v;
+  }
+
+  return parseOr();
+}
+
+/**
+ * Find the checklist item a part belongs to under the current config, by
+ * testing it against each visible item's compatibility filter. Returns the
+ * item key (e.g. `wheels::rear-wheel`) or null if the part fits no slot.
+ * Used to auto-link parts that are installed on the bike.
+ */
+export function matchItemForPart(part: PartRecord, cfg: ChecklistConfig): string | null {
+  for (const key of visibleItemKeys(cfg)) {
+    const filter = getCompatibilityFilter(key, cfg);
+    if (filter && evalFilter(filter, part)) return key;
+  }
+  return null;
 }

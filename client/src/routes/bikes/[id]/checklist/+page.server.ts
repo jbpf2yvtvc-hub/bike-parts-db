@@ -3,13 +3,31 @@ import { error, redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { getOrCreateProgress, normalizeConfig } from '$lib/server/checklist';
 import { getLabel } from '$lib/schema-utils';
+import { matchItemForPart } from '$lib/checklist-compatibility';
+import type { PartRecord } from '$lib/types';
 
-interface LinkedPartSummary {
+// One resolved link for an item, with where it came from:
+//  - 'bike'   : derived automatically because the part is installed on this bike
+//  - 'manual' : linked by the user via the part picker
+interface LinkEntry {
   id: string;
   type_id: string;
   title: string;
   bike?: string;
   bikeName?: string;
+  source: 'bike' | 'manual';
+}
+
+function summarizeLink(p: any, source: 'bike' | 'manual'): LinkEntry {
+  return {
+    id: p.id,
+    type_id: p.type_id,
+    title:
+      [p.attributes?.brand, p.attributes?.model].filter(Boolean).join(' ') || getLabel(p.type_id),
+    bike: p.bike || undefined,
+    bikeName: p.expand?.bike?.name,
+    source
+  };
 }
 
 export const load: PageServerLoad = async (event) => {
@@ -26,35 +44,55 @@ export const load: PageServerLoad = async (event) => {
   const progress = await getOrCreateProgress(pb, bike.id, user.id);
   const config = normalizeConfig(progress.config);
   const checkedItems: string[] = Array.isArray(progress.checked_items) ? progress.checked_items : [];
-  const partLinks: Record<string, string> =
+  const explicitLinks: Record<string, string> =
     progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
 
-  // Resolve linked parts (for the per-item inventory panel).
-  const ids = [...new Set(Object.values(partLinks).filter(Boolean))];
-  const linkedParts: Record<string, LinkedPartSummary> = {};
-  if (ids.length) {
-    const clause = ids.map((id) => `id = '${id}'`).join(' || ');
-    const recs = await pb
+  // --- Auto-link parts installed on this bike --------------------------------
+  // Any part whose `bike` is this bike is matched to its checklist item and
+  // shown as linked automatically (no persistence — it always reflects the
+  // current part records). These implied links take precedence over manual
+  // links for the same item, since the part is physically on the bike.
+  const onBike = (await pb
+    .collection('parts')
+    .getFullList({ filter: `owner = '${user.id}' && bike = '${bike.id}'`, expand: 'bike' })) as any[];
+
+  const byId: Record<string, any> = {};
+  for (const p of onBike) byId[p.id] = p;
+
+  const impliedByKey: Record<string, string> = {};
+  for (const p of onBike) {
+    const key = matchItemForPart(p as PartRecord, config);
+    if (key) impliedByKey[key] = p.id; // last match wins (rare collisions)
+  }
+
+  // Resolve any manually-linked parts not already loaded (they may not be on
+  // the bike). Skip manual links overridden by an implied (on-bike) link.
+  const manualIds = Object.entries(explicitLinks)
+    .filter(([key, id]) => id && !(key in impliedByKey) && !byId[id])
+    .map(([, id]) => id);
+  if (manualIds.length) {
+    const clause = [...new Set(manualIds)].map((id) => `id = '${id}'`).join(' || ');
+    const recs = (await pb
       .collection('parts')
-      .getFullList({ filter: `owner = '${user.id}' && (${clause})`, expand: 'bike' });
-    for (const r of recs as any[]) {
-      linkedParts[r.id] = {
-        id: r.id,
-        type_id: r.type_id,
-        title:
-          [r.attributes?.brand, r.attributes?.model].filter(Boolean).join(' ') ||
-          getLabel(r.type_id),
-        bike: r.bike || undefined,
-        bikeName: r.expand?.bike?.name
-      };
-    }
+      .getFullList({ filter: `owner = '${user.id}' && (${clause})`, expand: 'bike' })) as any[];
+    for (const r of recs) byId[r.id] = r;
+  }
+
+  // Build the effective per-item link map (implied wins).
+  const links: Record<string, LinkEntry> = {};
+  for (const [key, id] of Object.entries(explicitLinks)) {
+    if (key in impliedByKey || !byId[id]) continue;
+    links[key] = summarizeLink(byId[id], 'manual');
+  }
+  for (const [key, id] of Object.entries(impliedByKey)) {
+    if (byId[id]) links[key] = summarizeLink(byId[id], 'bike');
   }
 
   // View filter for no-JS (?view=installed|needed); default 'all'.
   const rawView = event.url.searchParams.get('view');
   const view = rawView === 'installed' || rawView === 'needed' ? rawView : 'all';
 
-  return { bike, config, checkedItems, partLinks, linkedParts, view };
+  return { bike, config, checkedItems, links, view };
 };
 
 export const actions: Actions = {
