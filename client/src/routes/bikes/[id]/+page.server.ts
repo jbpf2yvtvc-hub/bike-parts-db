@@ -14,7 +14,7 @@ export const load: PageServerLoad = async (event) => {
   }
   const parts = await event.locals.pb
     .collection('parts')
-    .getFullList({ filter: `owner = '${user.id}' && bike = '${event.params.id}'`, sort: 'type_id' });
+    .getFullList({ filter: `owner = '${user.id}' && bikes.id ?= '${event.params.id}'`, sort: 'type_id' });
 
   return { bike, parts: parts as unknown as PartRecord[] };
 };

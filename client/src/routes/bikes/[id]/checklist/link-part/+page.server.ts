@@ -75,7 +75,7 @@ export const load: PageServerLoad = async (event) => {
   // Two-step (post-fetch) freehub filtering (§9.5).
   let compatible = raw;
   const incompatible: any[] = [];
-  if (!showAll && hasPostFetch(itemKey)) {
+  if (!showAll && hasPostFetch(itemKey, config)) {
     const ctx: PostFetchContext = {};
     const rearWheelId = partLinks['wheels::rear-wheel'];
     if (itemKey === 'drivetrain::cassette' && rearWheelId) {

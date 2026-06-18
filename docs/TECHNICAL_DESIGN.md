@@ -208,6 +208,7 @@ Single-speed / tension: `cog`, `chain_tensioner`, `eccentric_bb`.
 
 Key compatibility-bearing fields (must match the filter table in §9.5 exactly):
 
+- `frame.integrated_seatpost_clamp`: bool — when true the checklist asks for a binder bolt instead of a separate seatpost collar (§9.5)
 - `fork.brake_mount`: `boss (canti/V-brake)` | `disc IS` | `disc PM` | `none`
 - `headset.standard`: `threaded` | `threadless EC` | `threadless ZS` | `threadless IS` | `threadless taper`
 - `stem.style`: `quill (threaded)` | `threadless clamp-on`
@@ -420,8 +421,10 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 | `bb::bottom-bracket` | `tension≠ebb` | `type_id='bottom_bracket'` | — |
 | `bb::eccentric-bb` | `rear_speeds:1 && tension:ebb` | `type_id='eccentric_bb'` | — |
 | `bb::crankset` | `chainrings:N` | `type_id='crankset' && attributes.chainring_count='N'` | — |
-| `drivetrain::front-derailleur` | `chainrings:2\|3` | `type_id='derailleur_front'` | — |
-| `drivetrain::rear-derailleur` | `rear_speeds:6–12` | `type_id='derailleur_rear' && attributes.speed='<rear_speeds>'` | — |
+| `drivetrain::front-derailleur` | `chainrings:2\|3`, indexed | `type_id='derailleur_front' && attributes.max_chainrings='<chainrings>'` | — |
+| `drivetrain::front-derailleur` | `chainrings:2\|3`, friction | `type_id='derailleur_front'` | `max_chainrings >= chainrings` |
+| `drivetrain::rear-derailleur` | `rear_speeds:6–12`, indexed | `type_id='derailleur_rear' && attributes.speed='<rear_speeds>'` | — |
+| `drivetrain::rear-derailleur` | `rear_speeds:6–12`, friction | `type_id='derailleur_rear'` | `speed >= rear_speeds` |
 | `drivetrain::cassette` | `rear_speeds:6–12` | `type_id='cassette' && attributes.speed='<rear_speeds>'` | `freehubCompatible(part.attributes.freehub_standard, rear_speeds)`; if a rear wheel is already linked, also require matching `freehub_standard` |
 | `drivetrain::chain` | `rear_speeds:6–12` | `type_id='chain' && attributes.speed='<rear_speeds>'` | — |
 | `drivetrain::chain` | `rear_speeds:1` | `type_id='chain' && attributes.width~'1/8'` | — |
@@ -444,9 +447,14 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 | `wheels::rear-wheel` | `rear_speeds:6–12` | `type_id='wheel' && attributes.position='rear'` | `freehubCompatible(...)`; incompatible wheels shown in a separate "Incompatible with current configuration" group, **not hidden** |
 | `seatpost::seatpost` | always | `type_id='seatpost'` | — |
 | `seatpost::saddle` | always | `type_id='saddle'` | — |
-| `seatpost::seatpost-clamp` | always | `type_id='seatpost_clamp'` | — |
+| `seatpost::seatpost-clamp` | frame has no integrated clamp | `type_id='seatpost_clamp'` | — |
+| `seatpost::binder-bolt` | frame has integrated clamp | — (no picker; check-off only) | — |
 
 **Two-step filtering** (used where a row has a post-fetch filter): PocketBase cannot run the freehub matrix, so the server first queries by `type_id`/attributes, then applies the TS predicate in the SvelteKit `load()` before rendering. This is fine at personal-inventory scale (hundreds of parts). At very large scale it would need denormalising; see §11 risks.
+
+**Shifting mode (friction vs indexed).** The config carries `front_shifting` and `rear_shifting` (`indexed` | `friction`), surfaced as selects on the left/right shifter items in the shifting section (they belong to the configurator form via the `form` attribute, so they persist with the rest of the config, no-JS too). **Indexed** requires an exact speed match (rear derailleur `speed = rear_speeds`; front derailleur `max_chainrings = chainrings`). **Friction** relaxes this to "supports *at least* that many" via a post-fetch numeric predicate — e.g. a 9-speed rear derailleur is offered for a 7-speed build, and a triple front derailleur for a double. Auto-link (`matchItemForPart`) uses the same filters.
+
+**Frame-driven seatpost item.** The linked frame's `integrated_seatpost_clamp` attribute decides the seatpost section: when **false** the list shows **Seatpost clamp (collar)** (`seatpost::seatpost-clamp`, links to a `seatpost_clamp` part); when **true** it instead shows **Binder bolt (standard or QR)** (`seatpost::binder-bolt`, a check-off item with no picker, since a binder bolt isn't tracked as inventory). This is threaded into item visibility via a `ChecklistContext` derived from the build's frame.
 
 **Picker behaviour:**
 - Linked part shows type + key attributes + current bike: "On this bike ✓", "📍 On: <bike name>", or "In inventory · not on a bike".

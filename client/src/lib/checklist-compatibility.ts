@@ -15,7 +15,7 @@
  * strings in schemas/*.json. Keep the two in sync — a mismatch silently yields
  * empty pickers (§11 risk).
  */
-import { visibleItemKeys, type ChecklistConfig } from './checklist-data';
+import { visibleItemKeys, type ChecklistConfig, type ChecklistContext } from './checklist-data';
 import { freehubCompatible } from './freehub-compatibility';
 import type { PartRecord } from './types';
 
@@ -96,9 +96,17 @@ export function getCompatibilityFilter(
       return `type_id='crankset' && attributes.chainring_count='${cfg.chainrings}'`;
 
     case 'drivetrain::front-derailleur':
-      return "type_id='derailleur_front'";
+      // Indexed: exact chainring count. Friction: any FD rated for >= the
+      // chainring count (post-fetch numeric check, so no speed clause here).
+      return cfg.front_shifting === 'friction'
+        ? "type_id='derailleur_front'"
+        : `type_id='derailleur_front' && attributes.max_chainrings='${cfg.chainrings}'`;
     case 'drivetrain::rear-derailleur':
-      return `type_id='derailleur_rear' && attributes.speed='${rs}'`;
+      // Indexed: exact speed. Friction: any RD that shifts >= rear_speeds
+      // (post-fetch numeric check, so no speed clause here).
+      return cfg.rear_shifting === 'friction'
+        ? "type_id='derailleur_rear'"
+        : `type_id='derailleur_rear' && attributes.speed='${rs}'`;
     case 'drivetrain::cassette':
       return `type_id='cassette' && attributes.speed='${rs}'`; // + freehub post-fetch
     case 'drivetrain::chain':
@@ -161,8 +169,12 @@ export function hasIncompatibleGroup(itemKey: string): boolean {
 }
 
 /** Does this item apply a post-fetch predicate at all (two-step filter)? */
-export function hasPostFetch(itemKey: string): boolean {
-  return itemKey === 'drivetrain::cassette' || itemKey === 'wheels::rear-wheel';
+export function hasPostFetch(itemKey: string, cfg: ChecklistConfig): boolean {
+  if (itemKey === 'drivetrain::cassette' || itemKey === 'wheels::rear-wheel') return true;
+  // Friction shifting uses a numeric "at least N speeds" check that PB can't do.
+  if (itemKey === 'drivetrain::rear-derailleur') return cfg.rear_shifting === 'friction';
+  if (itemKey === 'drivetrain::front-derailleur') return cfg.front_shifting === 'friction';
+  return false;
 }
 
 export interface PostFetchContext {
@@ -193,6 +205,20 @@ export function classifyPart(
   if (itemKey === 'wheels::rear-wheel') {
     const fh = part.attributes?.freehub_standard;
     return freehubCompatible(fh, cfg.rear_speeds) ? 'compatible' : 'incompatible';
+  }
+
+  // Friction rear shifting: a derailleur that shifts >= rear_speeds works.
+  if (itemKey === 'drivetrain::rear-derailleur') {
+    const speed = Number(part.attributes?.speed);
+    return Number.isFinite(speed) && speed >= Number(cfg.rear_speeds)
+      ? 'compatible'
+      : 'incompatible';
+  }
+
+  // Friction front shifting: an FD rated for >= the chainring count works.
+  if (itemKey === 'drivetrain::front-derailleur') {
+    const max = Number(part.attributes?.max_chainrings);
+    return Number.isFinite(max) && max >= Number(cfg.chainrings) ? 'compatible' : 'incompatible';
   }
 
   return 'compatible';
@@ -282,8 +308,12 @@ function evalFilter(filter: string, part: PartRecord): boolean {
  * item key (e.g. `wheels::rear-wheel`) or null if the part fits no slot.
  * Used to auto-link parts that are installed on the bike.
  */
-export function matchItemForPart(part: PartRecord, cfg: ChecklistConfig): string | null {
-  for (const key of visibleItemKeys(cfg)) {
+export function matchItemForPart(
+  part: PartRecord,
+  cfg: ChecklistConfig,
+  ctx: ChecklistContext = {}
+): string | null {
+  for (const key of visibleItemKeys(cfg, ctx)) {
     const filter = getCompatibilityFilter(key, cfg);
     if (filter && evalFilter(filter, part)) return key;
   }

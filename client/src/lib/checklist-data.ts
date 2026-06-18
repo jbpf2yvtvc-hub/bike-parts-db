@@ -18,6 +18,7 @@ export type BrakeAxis = 'canti' | 'vbrake' | 'cp' | 'disc-short' | 'disc-long';
 export type Chainrings = '1' | '2' | '3';
 export type RearSpeeds = '1' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
 export type Tension = 'horizontal' | 'tensioner' | 'ebb';
+export type ShiftingMode = 'indexed' | 'friction';
 
 export interface ChecklistConfig {
   fork: ForkAxis;
@@ -26,6 +27,18 @@ export interface ChecklistConfig {
   chainrings: Chainrings;
   rear_speeds: RearSpeeds;
   tension: Tension;
+  /** Front/rear shifter type. Friction relaxes derailleur speed matching to
+   *  "supports at least N speeds" instead of exact (§9.5). */
+  front_shifting: ShiftingMode;
+  rear_shifting: ShiftingMode;
+}
+
+/**
+ * Extra, non-configurator context that affects item visibility — currently
+ * whether the linked frame has an integrated seatpost clamp.
+ */
+export interface ChecklistContext {
+  frameIntegratedClamp?: boolean;
 }
 
 export const DEFAULT_CONFIG: ChecklistConfig = {
@@ -34,7 +47,9 @@ export const DEFAULT_CONFIG: ChecklistConfig = {
   brake: 'canti',
   chainrings: '2',
   rear_speeds: '10',
-  tension: 'horizontal'
+  tension: 'horizontal',
+  front_shifting: 'indexed',
+  rear_shifting: 'indexed'
 };
 
 type Dyn<T> = T | ((cfg: ChecklistConfig) => T);
@@ -44,7 +59,7 @@ export interface ChecklistItem {
   t: Dyn<string>;
   n?: Dyn<string>;
   /** Visibility predicate; defaults to always visible. */
-  visible?: (cfg: ChecklistConfig) => boolean;
+  visible?: (cfg: ChecklistConfig, ctx: ChecklistContext) => boolean;
   /** If false, the item has no inventory part picker (tools/consumables). */
   picker?: boolean;
 }
@@ -227,7 +242,19 @@ export const SECTIONS: ChecklistSection[] = [
     title: 'Seatpost & saddle',
     items: [
       { id: 'seatpost', t: 'Seatpost' },
-      { id: 'seatpost-clamp', t: 'Seatpost clamp' },
+      {
+        id: 'seatpost-clamp',
+        t: 'Seatpost clamp (collar)',
+        // Hidden when the frame has an integrated clamp (binder bolt instead).
+        visible: (_cfg, ctx) => !ctx.frameIntegratedClamp
+      },
+      {
+        id: 'binder-bolt',
+        t: 'Binder bolt (standard or QR)',
+        n: 'The frame has an integrated seatpost clamp — you just need the binder bolt (a standard bolt or a quick-release).',
+        // Shown only when the frame has an integrated clamp. No part picker.
+        visible: (_cfg, ctx) => !!ctx.frameIntegratedClamp
+      },
       { id: 'saddle', t: 'Saddle' }
     ]
   }
@@ -249,8 +276,12 @@ export function findItem(key: string): { section: ChecklistSection; item: Checkl
   return section && item ? { section, item } : null;
 }
 
-export function itemVisible(item: ChecklistItem, cfg: ChecklistConfig): boolean {
-  return item.visible ? item.visible(cfg) : true;
+export function itemVisible(
+  item: ChecklistItem,
+  cfg: ChecklistConfig,
+  ctx: ChecklistContext = {}
+): boolean {
+  return item.visible ? item.visible(cfg, ctx) : true;
 }
 
 function resolveDyn<T>(value: Dyn<T> | undefined, cfg: ChecklistConfig): T | undefined {
@@ -303,11 +334,11 @@ export function getConfigWarnings(cfg: ChecklistConfig): string[] {
 }
 
 /** Flatten all currently-visible item keys for a config (progress denominator). */
-export function visibleItemKeys(cfg: ChecklistConfig): string[] {
+export function visibleItemKeys(cfg: ChecklistConfig, ctx: ChecklistContext = {}): string[] {
   const keys: string[] = [];
   for (const section of SECTIONS) {
     for (const item of section.items) {
-      if (itemVisible(item, cfg)) keys.push(itemKey(section.id, item.id));
+      if (itemVisible(item, cfg, ctx)) keys.push(itemKey(section.id, item.id));
     }
   }
   return keys;

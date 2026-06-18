@@ -8,7 +8,8 @@ import {
   type Chainrings,
   type ForkAxis,
   type RearSpeeds,
-  type Tension
+  type Tension,
+  type ShiftingMode
 } from '$lib/checklist-data';
 
 /** One progress record per bike; create with defaults on first visit. */
@@ -32,6 +33,7 @@ const BRAKES: BrakeAxis[] = ['canti', 'vbrake', 'cp', 'disc-short', 'disc-long']
 const CHAINRINGS: Chainrings[] = ['1', '2', '3'];
 const REAR_SPEEDS: RearSpeeds[] = ['1', '6', '7', '8', '9', '10', '11', '12'];
 const TENSIONS: Tension[] = ['horizontal', 'tensioner', 'ebb'];
+const SHIFTING: ShiftingMode[] = ['indexed', 'friction'];
 
 function pick<T extends string>(value: unknown, allowed: T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
@@ -46,7 +48,9 @@ export function normalizeConfig(raw: Record<string, unknown> | null | undefined)
     brake: pick(r.brake, BRAKES, DEFAULT_CONFIG.brake),
     chainrings: pick(r.chainrings, CHAINRINGS, DEFAULT_CONFIG.chainrings),
     rear_speeds: pick(r.rear_speeds, REAR_SPEEDS, DEFAULT_CONFIG.rear_speeds),
-    tension: pick(r.tension, TENSIONS, DEFAULT_CONFIG.tension)
+    tension: pick(r.tension, TENSIONS, DEFAULT_CONFIG.tension),
+    front_shifting: pick(r.front_shifting, SHIFTING, DEFAULT_CONFIG.front_shifting),
+    rear_shifting: pick(r.rear_shifting, SHIFTING, DEFAULT_CONFIG.rear_shifting)
   };
   // The `tension` axis only applies to single-speed builds (§9.3).
   if (cfg.rear_speeds !== '1') cfg.tension = 'horizontal';

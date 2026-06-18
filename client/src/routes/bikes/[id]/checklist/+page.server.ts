@@ -63,9 +63,22 @@ export const load: PageServerLoad = async (event) => {
   const byId: Record<string, any> = {};
   for (const p of onBike) byId[p.id] = p;
 
+  // The frame for this build (on-bike, else manually linked) decides whether
+  // the seatpost section shows a "collar" or a "binder bolt" item (§9.5).
+  let framePart = onBike.find((p) => p.type_id === 'frame');
+  if (!framePart && explicitLinks['frame::frame']) {
+    try {
+      framePart = (await pb.collection('parts').getOne(explicitLinks['frame::frame'])) as any;
+      if (framePart) byId[framePart.id] = framePart;
+    } catch {
+      /* linked frame missing — ignore */
+    }
+  }
+  const ctx = { frameIntegratedClamp: !!framePart?.attributes?.integrated_seatpost_clamp };
+
   const impliedByKey: Record<string, string> = {};
   for (const p of onBike) {
-    const key = matchItemForPart(p as PartRecord, config);
+    const key = matchItemForPart(p as PartRecord, config, ctx);
     if (key) impliedByKey[key] = p.id; // last match wins (rare collisions)
   }
 
@@ -96,7 +109,7 @@ export const load: PageServerLoad = async (event) => {
   const rawView = event.url.searchParams.get('view');
   const view = rawView === 'installed' || rawView === 'needed' ? rawView : 'all';
 
-  return { bike, config, checkedItems, links, view };
+  return { bike, config, checkedItems, links, view, ctx };
 };
 
 export const actions: Actions = {

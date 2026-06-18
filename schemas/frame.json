@@ -26,6 +26,12 @@
       "type": "select",
       "options": ["vertical", "horizontal", "track", "sliding"]
     },
+    {
+      "id": "integrated_seatpost_clamp",
+      "label": "Integrated seatpost clamp",
+      "type": "boolean",
+      "hint": "If the frame has a built-in seatpost clamp, the build list asks for a binder bolt instead of a separate collar"
+    },
     { "id": "serial", "label": "Serial number", "type": "text" },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]

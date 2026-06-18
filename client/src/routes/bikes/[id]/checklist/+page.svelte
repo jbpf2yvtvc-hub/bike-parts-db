@@ -30,6 +30,8 @@
   // Effective per-item links (manual + parts auto-linked because they're
   // installed on this bike); keyed by item key.
   const links = $derived(data.links as Record<string, any>);
+  // Visibility context (e.g. whether the frame has an integrated seatpost clamp).
+  const ctx = $derived(data.ctx as { frameIntegratedClamp?: boolean });
 
   // A linked part auto-checks its item, so an item counts as done ("installed")
   // when it is either manually checked or has a linked part.
@@ -42,7 +44,7 @@
 
   const subtitle = $derived(buildSubtitle(config));
   const warnings = $derived(getConfigWarnings(config));
-  const visKeys = $derived(visibleItemKeys(config));
+  const visKeys = $derived(visibleItemKeys(config, ctx));
   const total = $derived(visKeys.length);
   const done = $derived(visKeys.filter(isDone).length);
   const pct = $derived(total ? Math.round((done / total) * 100) : 0);
@@ -71,7 +73,9 @@
     if (config.rear_speeds !== '1') config.tension = 'horizontal';
     clearTimeout(cfgTimer);
     cfgTimer = setTimeout(async () => {
-      await fetch('config', {
+      // Absolute path — a relative 'config' would resolve to /bikes/<id>/config
+      // (the page has no trailing slash) and silently 404, losing the config.
+      await fetch(`/bikes/${bikeId}/checklist/config`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(config)
@@ -121,8 +125,9 @@
 <!-- Sticky configurator bar with yellow bottom border (§9.6). -->
 <div class="sticky top-0 z-30 -mx-4 border-b-2 border-accent bg-ground/95 px-4 py-3 backdrop-blur">
   <form
+    id="configurator"
     method="POST"
-    action="config"
+    action={`/bikes/${bikeId}/checklist/config`}
     onsubmit={(e) => mounted && e.preventDefault()}
   >
     <fieldset>
@@ -241,7 +246,7 @@
   <input type="hidden" name="view" value={view} />
 
   {#each SECTIONS as section (section.id)}
-    {@const visibleItems = section.items.filter((i) => itemVisible(i, config))}
+    {@const visibleItems = section.items.filter((i) => itemVisible(i, config, ctx))}
     {@const shownItems = visibleItems.filter((i) => matchesView(itemKey(section.id, i.id)))}
     {@const secDone = visibleItems.filter((i) => isDone(itemKey(section.id, i.id))).length}
     {#if shownItems.length}
@@ -288,6 +293,40 @@
                   {#if note}<span class="mt-1 block text-sm text-ink-muted">{note}</span>{/if}
                 </span>
               </label>
+
+              <!-- Shifter type. Friction relaxes derailleur matching to
+                   "supports at least N speeds". The selects belong to the
+                   configurator form (form="configurator") so they persist with
+                   the rest of the config, with no JS too. -->
+              {#if key === 'shifting::left-shifter'}
+                <label class="mt-3 flex items-center gap-2 text-sm">
+                  <span class="text-ink-muted">Front shifting</span>
+                  <select
+                    form="configurator"
+                    name="front_shifting"
+                    bind:value={config.front_shifting}
+                    onchange={onConfigChange}
+                    class="min-h-[36px] rounded border border-border bg-surface-2 px-2"
+                  >
+                    <option value="indexed">indexed</option>
+                    <option value="friction">friction</option>
+                  </select>
+                </label>
+              {:else if key === 'shifting::right-shifter' && config.rear_speeds !== '1'}
+                <label class="mt-3 flex items-center gap-2 text-sm">
+                  <span class="text-ink-muted">Rear shifting</span>
+                  <select
+                    form="configurator"
+                    name="rear_shifting"
+                    bind:value={config.rear_shifting}
+                    onchange={onConfigChange}
+                    class="min-h-[36px] rounded border border-border bg-surface-2 px-2"
+                  >
+                    <option value="indexed">indexed</option>
+                    <option value="friction">friction</option>
+                  </select>
+                </label>
+              {/if}
 
               {#if hasPicker(key)}
                 <!-- Inventory reference panel uses the app card style (§9.6). -->
