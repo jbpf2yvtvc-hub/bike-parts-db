@@ -111,7 +111,17 @@ export const actions: Actions = {
     const links: Record<string, string> =
       progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
     links[itemKey] = partId;
-    await pb.collection('checklist_progress').update(progress.id, { part_links: links });
+
+    // Linking a part auto-checks its checklist item (the checkbox then renders
+    // checked + disabled until the part is unlinked).
+    const checkedItems: string[] = Array.isArray(progress.checked_items)
+      ? progress.checked_items
+      : [];
+    const checked = [...new Set([...checkedItems, itemKey])];
+
+    await pb
+      .collection('checklist_progress')
+      .update(progress.id, { part_links: links, checked_items: checked });
 
     throw redirect(303, `/bikes/${event.params.id}/checklist`);
   }

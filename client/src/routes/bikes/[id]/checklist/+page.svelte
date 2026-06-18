@@ -27,11 +27,16 @@
   const partLinks = $derived(data.partLinks as Record<string, string>);
   const linkedParts = $derived(data.linkedParts as Record<string, any>);
 
+  // A linked part auto-checks its item, so an item counts as done when it is
+  // either manually checked or has a linked part.
+  const isLinked = (key: string): boolean => !!linkedParts[partLinks[key]];
+  const isDone = (key: string): boolean => checked.has(key) || isLinked(key);
+
   const subtitle = $derived(buildSubtitle(config));
   const warnings = $derived(getConfigWarnings(config));
   const visKeys = $derived(visibleItemKeys(config));
   const total = $derived(visKeys.length);
-  const done = $derived(visKeys.filter((k) => checked.has(k)).length);
+  const done = $derived(visKeys.filter(isDone).length);
   const pct = $derived(total ? Math.round((done / total) * 100) : 0);
 
   // --- JS enhancement: debounced persistence (§9.1, step 17) -----------------
@@ -204,20 +209,30 @@
             {@const key = itemKey(section.id, item.id)}
             {@const note = getDynamicNote(item, config)}
             {@const linked = linkedParts[partLinks[key]]}
+            {@const linkNoteId = key.replace('::', '--') + '-linknote'}
             <li class="rounded-lg border border-border bg-surface p-4">
               <label class="flex items-start gap-3">
+                <!-- A linked part auto-checks the item; the checkbox is then
+                     checked + disabled until the part is unlinked. -->
                 <input
                   type="checkbox"
                   name="checked"
                   value={key}
-                  checked={checked.has(key)}
+                  checked={checked.has(key) || !!linked}
+                  disabled={!!linked}
+                  aria-describedby={linked ? linkNoteId : undefined}
                   onchange={() => mounted && toggleCheck(key)}
-                  class="mt-1 h-5 w-5 shrink-0 rounded border-border bg-surface-2"
+                  class="mt-1 h-5 w-5 shrink-0 rounded border-border bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <span>
-                  <span class="font-condensed text-lg font-semibold {checked.has(key) ? 'text-ink-muted line-through' : ''}">
+                  <span class="font-condensed text-lg font-semibold {checked.has(key) || linked ? 'text-ink-muted line-through' : ''}">
                     {getTitle(item, config)}
                   </span>
+                  {#if linked}
+                    <span id={linkNoteId} class="mt-1 block text-xs text-ink-muted">
+                      Auto-checked — a part is linked. Unlink it to edit this item.
+                    </span>
+                  {/if}
                   {#if note}<span class="mt-1 block text-sm text-ink-muted">{note}</span>{/if}
                 </span>
               </label>

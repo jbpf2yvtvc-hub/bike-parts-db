@@ -60,9 +60,17 @@ export const actions: Actions = {
     const user = requireUser(event);
     const pb = event.locals.pb;
     const form = await event.request.formData();
-    const checked = form.getAll('checked').map(String);
+    const submitted = form.getAll('checked').map(String);
 
     const progress = await getOrCreateProgress(pb, event.params.id, user.id);
+    const links: Record<string, string> =
+      progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
+
+    // Items with a linked part are auto-checked and their checkboxes are
+    // disabled, so a disabled checkbox never submits its value. Union the
+    // linked item keys back in so their checked state is always preserved.
+    const checked = [...new Set([...submitted, ...Object.keys(links)])];
+
     await pb.collection('checklist_progress').update(progress.id, { checked_items: checked });
 
     if (form.get('__noscript') === '1') throw redirect(303, `/bikes/${event.params.id}/checklist`);
@@ -79,7 +87,16 @@ export const actions: Actions = {
     const links: Record<string, string> =
       progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
     delete links[key];
-    await pb.collection('checklist_progress').update(progress.id, { part_links: links });
+
+    // Unlinking clears the auto-check and re-enables the checkbox.
+    const checkedItems: string[] = Array.isArray(progress.checked_items)
+      ? progress.checked_items
+      : [];
+    const checked = checkedItems.filter((k) => k !== key);
+
+    await pb
+      .collection('checklist_progress')
+      .update(progress.id, { part_links: links, checked_items: checked });
 
     throw redirect(303, `/bikes/${event.params.id}/checklist`);
   }

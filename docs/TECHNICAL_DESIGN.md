@@ -449,7 +449,7 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 
 **Picker behaviour:**
 - Linked part shows type + key attributes + current bike: "On this bike ✓", "📍 On: <bike name>", or "In inventory · not on a bike".
-- Checking an item and linking a part are independent actions.
+- Linking a part **auto-checks** its checklist item: the item's checkbox renders **checked and disabled (inactive)** while a part is linked. **Unlinking** the part re-enables the checkbox and clears the auto-check, so it can be toggled manually again. (This supersedes the earlier design where checking and linking were independent.) Implementation: `linkPart` adds the item key to `checked_items`; `unlinkPart` removes it; because a disabled checkbox does not submit its value, `saveChecks` unions the submitted checks with every linked item key so linked items stay checked. Progress (`done`/`total`) counts an item as done when it is manually checked **or** has a linked part.
 - Zero compatible results → "No compatible parts found" with **[+ Add a new part]** (`/parts/new?type=<type_id>`) and **[Show all parts anyway]** (drops the filter for that picker session only).
 - Incompatible-but-owned parts are surfaced in a separate labelled group rather than hidden, so the user never thinks an item they own has vanished.
 
