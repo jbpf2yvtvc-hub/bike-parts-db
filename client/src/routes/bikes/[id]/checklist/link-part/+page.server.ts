@@ -23,11 +23,20 @@ function summarize(part: any, bikeId: string) {
     .filter(([k, v]) => v != null && v !== '' && k !== 'brand' && k !== 'model' && k !== 'notes')
     .slice(0, 4)
     .map(([, v]) => (Array.isArray(v) ? v.join(', ') : String(v)));
+
+  const bikeIds: string[] = Array.isArray(part.bikes) ? part.bikes : [];
+  const otherBikeNames: string[] = (part.expand?.bikes ?? [])
+    .filter((b: any) => b.id !== bikeId)
+    .map((b: any) => b.name);
+  const quantity = part.quantity ?? 1;
+  const available = Math.max(0, quantity - bikeIds.length); // units not yet on a bike
+
   let status: string;
-  if (part.bike === bikeId) status = 'On this bike ✓';
-  else if (part.bike) status = `📍 On: ${part.expand?.bike?.name ?? 'another bike'}`;
+  if (bikeIds.includes(bikeId)) status = 'On this bike ✓';
+  else if (otherBikeNames.length) status = `📍 On: ${otherBikeNames.join(', ')}`;
   else status = 'In inventory · not on a bike';
-  return { id: part.id, type_id: part.type_id, title, keyAttrs, status };
+
+  return { id: part.id, type_id: part.type_id, title, keyAttrs, status, quantity, available };
 }
 
 export const load: PageServerLoad = async (event) => {
@@ -61,7 +70,7 @@ export const load: PageServerLoad = async (event) => {
 
   const raw = (await pb
     .collection('parts')
-    .getFullList({ filter, sort: '-created', expand: 'bike' })) as any[];
+    .getFullList({ filter, sort: '-created', expand: 'bikes' })) as any[];
 
   // Two-step (post-fetch) freehub filtering (§9.5).
   let compatible = raw;

@@ -17,7 +17,7 @@ export const load: PageServerLoad = async (event) => {
   const parts = await pb.collection('parts').getFullList({
     filter: clauses.join(' && '),
     sort: '-created',
-    expand: 'bike'
+    expand: 'bikes'
   });
 
   return {

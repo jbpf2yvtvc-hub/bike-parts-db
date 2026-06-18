@@ -8,7 +8,7 @@ export const load: PageServerLoad = async (event) => {
   const owner = `owner = '${user.id}'`;
 
   const [parts, bikes] = await Promise.all([
-    pb.collection('parts').getList(1, 5, { sort: '-created', filter: owner, expand: 'bike' }),
+    pb.collection('parts').getList(1, 5, { sort: '-created', filter: owner, expand: 'bikes' }),
     pb.collection('bikes').getList(1, 5, { sort: '-created', filter: owner })
   ]);
 

@@ -14,7 +14,9 @@ export interface PartRecord {
   owner: string;
   type_id: string;
   attributes: Record<string, any>;
-  bike?: string;
+  quantity?: number;
+  // Bikes this part is installed on (multi-relation; at most `quantity` of them).
+  bikes?: string[];
   disposition: Disposition;
   acquisition_date?: string;
   acquisition_price?: number;
@@ -23,7 +25,7 @@ export interface PartRecord {
   created?: string;
   updated?: string;
   // expanded relations (PocketBase `expand`)
-  expand?: { bike?: BikeRecord };
+  expand?: { bikes?: BikeRecord[] };
 }
 
 export interface BikeRecord {

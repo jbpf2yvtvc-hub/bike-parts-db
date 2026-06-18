@@ -169,7 +169,8 @@ The full set of part-type schema files to create is listed in §5.4.
 | `owner` | relation → users | Required |
 | `type_id` | text | Matches a `schemas/*.json` `type_id` |
 | `attributes` | json | All type-specific values |
-| `bike` | relation → bikes | Optional — which bike it's currently on |
+| `quantity` | number | How many of this part are owned (≥ 1, default 1) |
+| `bikes` | relation → bikes (multi) | Which bikes it's installed on. A part may be on up to `quantity` bikes (one unit each); the cap is enforced in app code |
 | `disposition` | select | `keep`, `for_sale`, `donate`, `unknown` |
 | `acquisition_date` | date | Optional |
 | `acquisition_price` | number | Optional |
@@ -254,7 +255,7 @@ Baseline GET form to `/search?q=`; PocketBase filter `parts?filter=(owner='UID' 
 
 ### 6.4 Delete protection
 
-Two-step confirmation everywhere. Bike deletion does **not** cascade-delete parts — it nullifies the `bike` relation on associated parts, with the dialog stating this explicitly.
+Two-step confirmation everywhere. Bike deletion does **not** cascade-delete parts — it removes the bike from each associated part's `bikes` relation (the parts themselves are kept), with the dialog stating this explicitly.
 
 ---
 
@@ -450,7 +451,8 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 **Picker behaviour:**
 - Linked part shows type + key attributes + current bike: "On this bike ✓", "📍 On: <bike name>", or "In inventory · not on a bike".
 - Linking a part **auto-checks** its checklist item: the item's checkbox renders **checked and disabled (inactive)** while a part is linked. **Unlinking** the part re-enables the checkbox and clears the auto-check, so it can be toggled manually again. (This supersedes the earlier design where checking and linking were independent.) Implementation: `linkPart` adds the item key to `checked_items`; `unlinkPart` removes it; because a disabled checkbox does not submit its value, `saveChecks` unions the submitted checks with every linked item key so linked items stay checked. Progress (`done`/`total`) counts an item as done when it is manually checked **or** has a linked part.
-- **Auto-linking from bike assignment:** any part whose `bike` is the checklist's bike is matched to its checklist item and shown as linked automatically (source `bike`), so installing a part on a bike — via the part's add/edit form — is reflected in that bike's checklist with no manual step. This is derived at load time (not persisted), so it always tracks the current part records; it takes precedence over a manual link for the same item. A part is matched to an item by evaluating the item's `getCompatibilityFilter` string against the part (`matchItemForPart`), keeping a single source of truth for compatibility. Auto-linked items show **View part / Edit · reassign bike** instead of *Unlink* (to remove it, change the part's bike). Manual links (for parts not on the bike, e.g. planning a build) keep *Change / Unlink*.
+- **Quantity & availability:** parts carry a `quantity` and can be installed on up to that many bikes (multi-relation `bikes`). The part picker shows each part's quantity and how many units are still available (`quantity − bikes assigned`), and the part add/edit form caps the bike multi-select at the quantity.
+- **Auto-linking from bike assignment:** any part whose `bikes` include the checklist's bike is matched to its checklist item and shown as linked automatically (source `bike`), so installing a part on a bike — via the part's add/edit form — is reflected in that bike's checklist with no manual step. This is derived at load time (not persisted), so it always tracks the current part records; it takes precedence over a manual link for the same item. A part is matched to an item by evaluating the item's `getCompatibilityFilter` string against the part (`matchItemForPart`), keeping a single source of truth for compatibility. Auto-linked items show **View part / Edit · reassign bike** instead of *Unlink* (to remove it, change the part's bike). Manual links (for parts not on the bike, e.g. planning a build) keep *Change / Unlink*.
 - Zero compatible results → "No compatible parts found" with **[+ Add a new part]** (`/parts/new?type=<type_id>`) and **[Show all parts anyway]** (drops the filter for that picker session only).
 - Incompatible-but-owned parts are surfaced in a separate labelled group rather than hidden, so the user never thinks an item they own has vanished.
 
@@ -480,7 +482,7 @@ Each step is a discrete Claude Code session. Hand them over in order. Steps 1–
 
 **6 — Parts CRUD.** "Build `/parts` list, `/parts/[id]`, `/parts/[id]/edit`. Add the disposition selector and bike dropdown. `DispositionBadge.svelte` uses icon + text + colour. Delete via `/parts/[id]/confirm-delete` page (no-JS) plus a Melt UI dialog enhancement. All targets ≥ 44 px."
 
-**7 — Bikes CRUD.** "Build `/bikes` list, `/bikes/[id]` (showing parts currently on the bike), edit, and confirm-delete. Bike deletion nullifies the `bike` relation on parts rather than deleting them — state this in the dialog."
+**7 — Bikes CRUD.** "Build `/bikes` list, `/bikes/[id]` (showing parts currently on the bike), edit, and confirm-delete. Bike deletion removes the bike from each part's `bikes` relation rather than deleting the parts — state this in the dialog."
 
 **8 — Search.** "Build `/search`: baseline `<form method='GET'>` → `?q=` → server filter; then a debounced-fetch enhancement. Rebuild a part's `tags` index field from its searchable attributes on every save."
 

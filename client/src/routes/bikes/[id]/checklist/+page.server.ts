@@ -13,19 +13,23 @@ interface LinkEntry {
   id: string;
   type_id: string;
   title: string;
-  bike?: string;
-  bikeName?: string;
+  quantity: number;
+  onThisBike: boolean;
+  otherBikeNames: string[];
   source: 'bike' | 'manual';
 }
 
-function summarizeLink(p: any, source: 'bike' | 'manual'): LinkEntry {
+function summarizeLink(p: any, thisBikeId: string, source: 'bike' | 'manual'): LinkEntry {
+  const bikeIds: string[] = Array.isArray(p.bikes) ? p.bikes : [];
+  const expanded: any[] = p.expand?.bikes ?? [];
   return {
     id: p.id,
     type_id: p.type_id,
     title:
       [p.attributes?.brand, p.attributes?.model].filter(Boolean).join(' ') || getLabel(p.type_id),
-    bike: p.bike || undefined,
-    bikeName: p.expand?.bike?.name,
+    quantity: p.quantity ?? 1,
+    onThisBike: bikeIds.includes(thisBikeId),
+    otherBikeNames: expanded.filter((b) => b.id !== thisBikeId).map((b) => b.name),
     source
   };
 }
@@ -54,7 +58,7 @@ export const load: PageServerLoad = async (event) => {
   // links for the same item, since the part is physically on the bike.
   const onBike = (await pb
     .collection('parts')
-    .getFullList({ filter: `owner = '${user.id}' && bike = '${bike.id}'`, expand: 'bike' })) as any[];
+    .getFullList({ filter: `owner = '${user.id}' && bikes.id ?= '${bike.id}'`, expand: 'bikes' })) as any[];
 
   const byId: Record<string, any> = {};
   for (const p of onBike) byId[p.id] = p;
@@ -74,7 +78,7 @@ export const load: PageServerLoad = async (event) => {
     const clause = [...new Set(manualIds)].map((id) => `id = '${id}'`).join(' || ');
     const recs = (await pb
       .collection('parts')
-      .getFullList({ filter: `owner = '${user.id}' && (${clause})`, expand: 'bike' })) as any[];
+      .getFullList({ filter: `owner = '${user.id}' && (${clause})`, expand: 'bikes' })) as any[];
     for (const r of recs) byId[r.id] = r;
   }
 
@@ -82,10 +86,10 @@ export const load: PageServerLoad = async (event) => {
   const links: Record<string, LinkEntry> = {};
   for (const [key, id] of Object.entries(explicitLinks)) {
     if (key in impliedByKey || !byId[id]) continue;
-    links[key] = summarizeLink(byId[id], 'manual');
+    links[key] = summarizeLink(byId[id], bike.id, 'manual');
   }
   for (const [key, id] of Object.entries(impliedByKey)) {
-    if (byId[id]) links[key] = summarizeLink(byId[id], 'bike');
+    if (byId[id]) links[key] = summarizeLink(byId[id], bike.id, 'bike');
   }
 
   // View filter for no-JS (?view=installed|needed); default 'all'.

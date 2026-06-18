@@ -13,10 +13,12 @@ export async function deleteBikeDetachingParts(
 ): Promise<number> {
   const parts = await pb
     .collection('parts')
-    .getFullList({ filter: `owner = '${ownerId}' && bike = '${bikeId}'` });
+    .getFullList({ filter: `owner = '${ownerId}' && bikes.id ?= '${bikeId}'` });
 
   for (const part of parts) {
-    await pb.collection('parts').update(part.id, { bike: null });
+    // Remove just this bike from the part's bikes; the part itself is kept.
+    const remaining = ((part.bikes as string[]) ?? []).filter((b) => b !== bikeId);
+    await pb.collection('parts').update(part.id, { bikes: remaining });
   }
 
   // Remove the per-bike checklist progress, if any.

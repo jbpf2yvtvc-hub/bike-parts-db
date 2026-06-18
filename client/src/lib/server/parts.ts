@@ -9,7 +9,8 @@ import {
 
 export interface PartMeta {
   disposition: string;
-  bike: string;
+  quantity: number;
+  bikes: string[];
   acquisition_date: string;
   acquisition_price: number | null;
   asking_price: number | null;
@@ -42,23 +43,39 @@ function num(form: FormData, key: string): number | null {
 /** Validate + normalise a submitted part form against its schema. */
 export function parsePartForm(schema: PartSchema, form: FormData): ParsedPart {
   const rawAttributes = readAttributes(schema, form);
+  const rawQty = Number(form.get('quantity'));
+  const quantity = Number.isFinite(rawQty) && rawQty >= 1 ? Math.floor(rawQty) : 1;
+  const bikes = form.getAll('bikes').map(String).filter(Boolean);
+
   const meta: PartMeta = {
     disposition: String(form.get('disposition') ?? 'unknown'),
-    bike: String(form.get('bike') ?? ''),
+    quantity,
+    bikes,
     acquisition_date: String(form.get('acquisition_date') ?? ''),
     acquisition_price: num(form, 'acquisition_price'),
     asking_price: num(form, 'asking_price')
   };
 
+  const errors: Record<string, string> = {};
+
+  // A part can be installed on at most `quantity` bikes (one unit each).
+  if (bikes.length > quantity) {
+    errors.bikes = `You have ${quantity} of this part but selected ${bikes.length} bikes. Increase the quantity or deselect a bike.`;
+  }
+
   const result = schemaToZod(schema).safeParse(rawAttributes);
-  if (!result.success) {
+  let attributes: Record<string, unknown> | undefined;
+  if (result.success) {
+    attributes = result.data as Record<string, unknown>;
+  } else {
     const fieldErrors = result.error.flatten().fieldErrors as Record<string, string[]>;
-    const errors: Record<string, string> = {};
     for (const k in fieldErrors) errors[k] = fieldErrors[k]?.[0] ?? 'Invalid value';
+  }
+
+  if (Object.keys(errors).length > 0 || !attributes) {
     return { ok: false, errors, meta, rawAttributes };
   }
 
-  const attributes = result.data as Record<string, unknown>;
   return { ok: true, attributes, tags: buildTags(schema, attributes), meta, rawAttributes };
 }
 
@@ -70,7 +87,8 @@ export function toRecord(typeId: string, ownerId: string, parsed: ParsedPart) {
     attributes: parsed.attributes ?? {},
     tags: parsed.tags ?? '',
     disposition: parsed.meta.disposition,
-    bike: parsed.meta.bike || null,
+    quantity: parsed.meta.quantity,
+    bikes: parsed.meta.bikes,
     acquisition_date: parsed.meta.acquisition_date || '',
     acquisition_price: parsed.meta.acquisition_price,
     asking_price: parsed.meta.asking_price

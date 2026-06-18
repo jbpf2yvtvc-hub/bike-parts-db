@@ -10,7 +10,8 @@
   const meta = $derived(
     form?.meta ?? {
       disposition: part.disposition,
-      bike: part.bike ?? '',
+      quantity: part.quantity ?? 1,
+      bikes: part.bikes ?? [],
       acquisition_date: part.acquisition_date ?? '',
       acquisition_price: part.acquisition_price ?? '',
       asking_price: part.asking_price ?? ''

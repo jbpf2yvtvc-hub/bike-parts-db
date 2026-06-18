@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { untrack } from 'svelte';
   import FormField from './FormField.svelte';
   import { DISPOSITIONS } from '$lib/types';
   import type { PartSchema } from '$lib/schema-utils';
@@ -21,6 +22,21 @@
   } = $props();
 
   const input = 'mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2';
+
+  // Quantity + multi-bike assignment. A part can be on at most `quantity`
+  // bikes (one unit each). When the cap is reached, unchecked bikes disable.
+  let quantity = $state(untrack(() => Math.max(1, Number(meta.quantity) || 1)));
+  let selected = $state(
+    untrack(() => new Set<string>(Array.isArray(meta.bikes) ? meta.bikes : []))
+  );
+  const atCap = $derived(selected.size >= quantity);
+
+  function toggleBike(id: string, checked: boolean) {
+    const next = new Set(selected);
+    if (checked) next.add(id);
+    else next.delete(id);
+    selected = next;
+  }
 </script>
 
 <form method="POST" use:enhance class="space-y-2">
@@ -43,14 +59,42 @@
     </div>
 
     <div>
-      <label for="bike" class="block font-medium">On bike</label>
-      <select id="bike" name="bike" class={input}>
-        <option value="">— Not on a bike —</option>
-        {#each bikes as b (b.id)}
-          <option value={b.id} selected={meta.bike === b.id}>{b.name}</option>
-        {/each}
-      </select>
+      <label for="quantity" class="block font-medium">Quantity</label>
+      <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" step="1"
+        bind:value={quantity} aria-describedby="quantity-hint" class={input} />
+      <p id="quantity-hint" class="mt-1 text-sm text-ink-muted">How many of this part you own.</p>
     </div>
+
+    <fieldset>
+      <legend class="block font-medium">On bike(s)</legend>
+      <p class="mt-1 text-sm text-ink-muted">
+        Assign to up to {quantity} bike{quantity === 1 ? '' : 's'} (one per unit).
+      </p>
+      {#if errors.bikes}
+        <p class="mt-1 text-sm text-red-400">{errors.bikes}</p>
+      {/if}
+      {#if bikes.length}
+        <div class="mt-2 space-y-1">
+          {#each bikes as b (b.id)}
+            {@const isSel = selected.has(b.id)}
+            <label class="flex min-h-[44px] items-center gap-2 {!isSel && atCap ? 'opacity-50' : ''}">
+              <input
+                type="checkbox"
+                name="bikes"
+                value={b.id}
+                checked={isSel}
+                disabled={!isSel && atCap}
+                onchange={(e) => toggleBike(b.id, e.currentTarget.checked)}
+                class="h-5 w-5 rounded border-border bg-surface-2 disabled:cursor-not-allowed"
+              />
+              <span>{b.name}</span>
+            </label>
+          {/each}
+        </div>
+      {:else}
+        <p class="mt-2 text-sm text-ink-muted">You have no bikes yet.</p>
+      {/if}
+    </fieldset>
 
     <div>
       <label for="acquisition_date" class="block font-medium">Acquisition date</label>

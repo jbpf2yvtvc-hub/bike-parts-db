@@ -26,16 +26,22 @@
 <div class="mb-4 flex items-start justify-between gap-3">
   <div>
     <p class="text-xs uppercase tracking-wide text-ink-muted">{getLabel(part.type_id)}</p>
-    <h1 class="font-condensed text-2xl font-bold">{title}</h1>
+    <h1 class="font-condensed text-2xl font-bold">
+      {title}{#if (part.quantity ?? 1) > 1}<span class="ml-2 text-lg font-normal text-ink-muted">×{part.quantity}</span>{/if}
+    </h1>
   </div>
   <DispositionBadge disposition={part.disposition} />
 </div>
 
-{#if part.expand?.bike}
-  <p class="mb-4 flex items-center gap-1 text-ink-muted">
-    <MapPin size={16} aria-hidden="true" /> On bike:
-    <a href={`/bikes/${part.expand.bike.id}`} class="text-accent underline">{part.expand.bike.name}</a>
+<p class="mb-1 text-ink-muted">Quantity owned: <span class="text-ink">{part.quantity ?? 1}</span></p>
+
+{#if part.expand?.bikes?.length}
+  <p class="mb-4 flex flex-wrap items-center gap-1 text-ink-muted">
+    <MapPin size={16} aria-hidden="true" /> On {part.expand.bikes.length === 1 ? 'bike' : 'bikes'}:
+    {#each part.expand.bikes as b, i (b.id)}<a href={`/bikes/${b.id}`} class="text-accent underline">{b.name}</a>{#if i < part.expand.bikes.length - 1}<span>,</span>{/if}{/each}
   </p>
+{:else}
+  <p class="mb-4 text-ink-muted">Not on a bike.</p>
 {/if}
 
 {#if data.schema}

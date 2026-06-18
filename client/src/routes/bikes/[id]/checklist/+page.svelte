@@ -95,9 +95,10 @@
 
   function linkStatus(p: any): string {
     if (!p) return '';
-    if (p.bike === bikeId) return 'On this bike ✓';
-    if (p.bike) return `📍 On: ${p.bikeName ?? 'another bike'}`;
-    return 'In inventory · not on a bike';
+    const qty = p.quantity > 1 ? ` · qty ${p.quantity}` : '';
+    if (p.onThisBike) return `On this bike ✓${qty}`;
+    if (p.otherBikeNames?.length) return `📍 On: ${p.otherBikeNames.join(', ')}${qty}`;
+    return `In inventory · not on a bike${qty}`;
   }
 
   function hasPicker(key: string): boolean {

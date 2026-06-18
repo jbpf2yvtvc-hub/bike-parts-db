@@ -35,6 +35,12 @@
           </p>
         {/if}
         <p class="mt-1 text-sm text-ink-muted">{p.status}</p>
+        <p class="mt-1 text-xs text-ink-muted">
+          Qty {p.quantity} ·
+          <span class={p.available > 0 ? 'text-keep' : 'text-for-sale'}>
+            {p.available} available
+          </span>
+        </p>
       </div>
       <form method="POST" action="?/linkPart">
         <input type="hidden" name="item" value={data.itemKey} />

@@ -7,7 +7,7 @@ export const load: PageServerLoad = async (event) => {
   requireUser(event);
   let part;
   try {
-    part = await event.locals.pb.collection('parts').getOne(event.params.id, { expand: 'bike' });
+    part = await event.locals.pb.collection('parts').getOne(event.params.id, { expand: 'bikes' });
   } catch {
     throw error(404, 'Part not found');
   }

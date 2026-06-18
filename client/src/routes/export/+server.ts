@@ -10,7 +10,7 @@ export const GET: RequestHandler = async (event) => {
   const owner = `owner = '${user.id}'`;
 
   const [parts, bikes] = await Promise.all([
-    pb.collection('parts').getFullList({ filter: owner, sort: 'type_id', expand: 'bike' }),
+    pb.collection('parts').getFullList({ filter: owner, sort: 'type_id', expand: 'bikes' }),
     pb.collection('bikes').getFullList({ filter: owner, sort: 'name' })
   ]);
 
