@@ -21,13 +21,14 @@
   --color-donate: #60a5fa;
   --color-unknown: #c2c2c2;
 
-  --font-display: 'Bebas Neue', system-ui, sans-serif;
-  --font-condensed: 'Barlow Condensed', system-ui, sans-serif;
+  /* Headings use Space Grotesk — geometric but not too round. Both heading
+     vars resolve to it for a consistent display voice across the app. */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-condensed: 'Space Grotesk', system-ui, sans-serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Fonts are loaded locally if present; the stack degrades to system-ui so
-   there are never blocking external font requests (§3 Perceivable). */
+/* The heading stack degrades to system-ui if the web font fails to load. */
 
 :root {
   color-scheme: dark;
@@ -45,6 +46,32 @@ body {
   min-height: 100dvh;
   background: var(--color-ground);
   color: var(--color-ink);
+}
+
+/* Headings use the geometric display face app-wide, with slight negative
+   tracking for a tighter, more geometric feel. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Native <details> disclosure: hide default markers (we supply a chevron) and
+   rotate the chevron when the section is open. */
+summary {
+  list-style: none;
+  cursor: pointer;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+details[open] > summary .chevron {
+  transform: rotate(180deg);
 }
 
 /* Visible, non-removed focus everywhere (SC 2.4.7). Never outline:none. */

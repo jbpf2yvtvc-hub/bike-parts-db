@@ -455,7 +455,11 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 
 ### 9.6 Visual identity
 
-Ported from the original artifact: Bebas Neue + Barlow Condensed, `#f5c800` yellow, dark `#0e0e0e` ground, the sticky configurator bar with yellow bottom border, section headers, progress bar, and coloured tag chips. The one addition — the per-item inventory panel — uses the app's standard card styling to visually separate "checklist content" (logic) from "inventory reference" (user data). All ported colours must still meet the §3 contrast commitments.
+`#f5c800` yellow, dark `#0e0e0e` ground, the sticky configurator bar with yellow bottom border, section headers, progress bar, and coloured tag chips. The one addition — the per-item inventory panel — uses the app's standard card styling to visually separate "checklist content" (logic) from "inventory reference" (user data). All colours must still meet the §3 contrast commitments.
+
+**Heading typography (app-wide):** headings use **Space Grotesk** — a geometric (but not too round) display face — applied to all `h1`–`h6` via a global rule plus the `--font-display` / `--font-condensed` tokens, with slight negative letter-spacing. (This replaces the original Bebas Neue + Barlow Condensed; the body text remains `system-ui`.) The font is loaded with `display=swap` and degrades to `system-ui`.
+
+**Section collapse & view filter:** each checklist section is a native `<details open>` (collapsible with no JS). A view filter — **All** (default) / **Installed** (done) / **Needed** (not done) — narrows the visible items; with no JS it is the `?view=` query param (server-rendered), and with JS it filters in place. Because a non-rendered checkbox can't submit, the no-JS form also emits hidden inputs for any checked item the filter hides, so a Save never drops them.
 
 ---
 

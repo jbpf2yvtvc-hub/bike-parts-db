@@ -13,13 +13,16 @@
   } from '$lib/checklist-data';
   import { getCompatibilityFilter } from '$lib/checklist-compatibility';
   import { getLabel } from '$lib/schema-utils';
-  import { TriangleAlert, Link2, MapPin, Plus, Check } from '@lucide/svelte';
+  import { TriangleAlert, Link2, MapPin, Plus, Check, ChevronDown } from '@lucide/svelte';
+
+  type ViewFilter = 'all' | 'installed' | 'needed';
 
   let { data }: { data: any } = $props();
 
   // Seed local state from the server load (intentionally initial-only).
   let config = $state<ChecklistConfig>(untrack(() => ({ ...data.config })));
   let checked = $state(new Set<string>(untrack(() => data.checkedItems)));
+  let view = $state<ViewFilter>(untrack(() => data.view));
   let mounted = $state(false);
   onMount(() => (mounted = true));
 
@@ -27,10 +30,14 @@
   const partLinks = $derived(data.partLinks as Record<string, string>);
   const linkedParts = $derived(data.linkedParts as Record<string, any>);
 
-  // A linked part auto-checks its item, so an item counts as done when it is
-  // either manually checked or has a linked part.
+  // A linked part auto-checks its item, so an item counts as done ("installed")
+  // when it is either manually checked or has a linked part.
   const isLinked = (key: string): boolean => !!linkedParts[partLinks[key]];
   const isDone = (key: string): boolean => checked.has(key) || isLinked(key);
+
+  // View filter: All / Installed (done) / Needed (not done).
+  const matchesView = (key: string): boolean =>
+    view === 'all' ? true : view === 'installed' ? isDone(key) : !isDone(key);
 
   const subtitle = $derived(buildSubtitle(config));
   const warnings = $derived(getConfigWarnings(config));
@@ -38,6 +45,21 @@
   const total = $derived(visKeys.length);
   const done = $derived(visKeys.filter(isDone).length);
   const pct = $derived(total ? Math.round((done / total) * 100) : 0);
+  const shownCount = $derived(visKeys.filter(matchesView).length);
+
+  const FILTERS: { value: ViewFilter; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'installed', label: 'Installed' },
+    { value: 'needed', label: 'Needed' }
+  ];
+
+  function selectView(e: MouseEvent, value: ViewFilter) {
+    // JS: filter in place. No-JS: the <a href> reloads with ?view=… and the
+    // server renders the filtered view.
+    if (!mounted) return;
+    e.preventDefault();
+    view = value;
+  }
 
   // --- JS enhancement: debounced persistence (§9.1, step 17) -----------------
   let cfgTimer: ReturnType<typeof setTimeout>;
@@ -193,19 +215,45 @@
   </div>
 {/if}
 
+<!-- View filter: All / Installed / Needed (§9 update). No-JS: links reload
+     with ?view=…; JS: filters in place. -->
+<div class="mt-6 inline-flex rounded-md border border-border bg-surface p-1" role="group" aria-label="Filter checklist items">
+  {#each FILTERS as f (f.value)}
+    {@const count = f.value === 'all' ? total : f.value === 'installed' ? done : total - done}
+    <a
+      href={f.value === 'all' ? '?' : `?view=${f.value}`}
+      onclick={(e) => selectView(e, f.value)}
+      aria-current={view === f.value ? 'true' : undefined}
+      class="min-h-[44px] rounded px-4 py-2 text-sm font-medium {view === f.value
+        ? 'bg-accent text-accent-ink'
+        : 'text-ink-muted hover:text-ink'}"
+    >
+      {f.label} <span class="opacity-70">({count})</span>
+    </a>
+  {/each}
+</div>
+
 <!-- The checklist itself is one form so it works with no JS (Save button). -->
-<form method="POST" action="?/saveChecks" class="mt-6 space-y-8">
+<form method="POST" action="?/saveChecks" class="mt-4 space-y-4">
   <input type="hidden" name="__noscript" value="1" />
+  <input type="hidden" name="view" value={view} />
 
   {#each SECTIONS as section (section.id)}
     {@const visibleItems = section.items.filter((i) => itemVisible(i, config))}
-    {#if visibleItems.length}
-      <section aria-labelledby={`sec-${section.id}`}>
-        <h2 id={`sec-${section.id}`} class="mb-3 border-l-4 border-accent pl-3 font-condensed text-xl font-bold uppercase tracking-wide">
-          {section.title}
-        </h2>
-        <ul class="space-y-3">
-          {#each visibleItems as item (item.id)}
+    {@const shownItems = visibleItems.filter((i) => matchesView(itemKey(section.id, i.id)))}
+    {@const secDone = visibleItems.filter((i) => isDone(itemKey(section.id, i.id))).length}
+    {#if shownItems.length}
+      <!-- Collapsible section (native <details>; works with no JS). -->
+      <details open class="overflow-hidden rounded-lg border border-border bg-surface">
+        <summary class="flex items-center justify-between gap-2 border-l-4 border-accent py-3 pl-3 pr-4">
+          <span class="flex items-center gap-2">
+            <ChevronDown size={18} class="chevron shrink-0 text-ink-muted transition-transform" aria-hidden="true" />
+            <h2 class="text-xl font-bold uppercase tracking-wide">{section.title}</h2>
+          </span>
+          <span class="text-xs text-ink-muted">{secDone}/{visibleItems.length}</span>
+        </summary>
+        <ul class="space-y-3 p-4">
+          {#each shownItems as item (item.id)}
             {@const key = itemKey(section.id, item.id)}
             {@const note = getDynamicNote(item, config)}
             {@const linked = linkedParts[partLinks[key]]}
@@ -267,9 +315,27 @@
             </li>
           {/each}
         </ul>
-      </section>
+      </details>
     {/if}
   {/each}
+
+  <!-- Preserve checked items that the active view filter hides, so a no-JS
+       Save doesn't drop them (a non-rendered checkbox can't submit). -->
+  {#each visKeys as k (k)}
+    {#if checked.has(k) && !matchesView(k)}
+      <input type="hidden" name="checked" value={k} />
+    {/if}
+  {/each}
+
+  {#if !shownCount}
+    <p class="rounded-lg border border-border bg-surface p-6 text-center text-ink-muted">
+      {view === 'needed'
+        ? 'Nothing needed — every visible item is installed. 🎉'
+        : view === 'installed'
+          ? 'No installed items yet — link a part or check items off.'
+          : 'No items for this configuration.'}
+    </p>
+  {/if}
 
   {#if !mounted}
     <button type="submit" class="min-h-[44px] rounded-md bg-accent px-8 py-2 font-semibold text-accent-ink">

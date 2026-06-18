@@ -50,7 +50,11 @@ export const load: PageServerLoad = async (event) => {
     }
   }
 
-  return { bike, config, checkedItems, partLinks, linkedParts };
+  // View filter for no-JS (?view=installed|needed); default 'all'.
+  const rawView = event.url.searchParams.get('view');
+  const view = rawView === 'installed' || rawView === 'needed' ? rawView : 'all';
+
+  return { bike, config, checkedItems, partLinks, linkedParts, view };
 };
 
 export const actions: Actions = {
