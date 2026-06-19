@@ -24,7 +24,7 @@
       "id": "dropout",
       "label": "Rear dropout",
       "type": "select",
-      "options": ["vertical", "horizontal", "track", "sliding"]
+      "options": ["vertical", "horizontal", "track", "sliding", "thru-axle"]
     },
     {
       "id": "brake_mount",

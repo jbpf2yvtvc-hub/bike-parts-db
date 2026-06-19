@@ -32,6 +32,9 @@ export interface FieldDef {
   inputmode?: 'text' | 'numeric' | 'decimal' | 'tel' | 'email' | 'url' | 'search';
   autocomplete?: string;
   options?: string[];
+  /** Conditionally show this field only when another field's value matches.
+   *  Enforced reactively when JS is on; with no JS the field always shows. */
+  showWhen?: { field: string; in: string[] };
 }
 
 export interface PartSchema {

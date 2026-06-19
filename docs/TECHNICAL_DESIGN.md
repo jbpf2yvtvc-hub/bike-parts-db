@@ -244,7 +244,7 @@ Every core feature works without JavaScript; JS enhances it. This table is the c
 
 ### 6.1 Dynamic intake form
 
-Server-side `load()` reads the chosen part-type schema; `schema-utils.ts` converts it to a Zod object (validation) and a field-config array (rendering). `FormField.svelte` renders one field: `<label>`, correct input type, `aria-describedby` hint, and inline error. Adding a new part type = add a JSON file + redeploy; no backend change.
+Server-side `load()` reads the chosen part-type schema; `schema-utils.ts` converts it to a Zod object (validation) and a field-config array (rendering). `FormField.svelte` renders one field: `<label>`, correct input type, `aria-describedby` hint, and inline error. Adding a new part type = add a JSON file + redeploy; no backend change. A field may also declare `showWhen: { field, in: [...] }` to render only when another field's value matches (e.g. wheel `freehub_standard` shows only for rear wheels) — enforced reactively with JS, and always shown without JS so the no-JS path still works.
 
 ### 6.2 Search
 
@@ -584,6 +584,10 @@ Each step is a discrete Claude Code session. Hand them over in order. Steps 1–
 These changes were made after the initial v1.0 build and are live. Where they differ from §10 (the original build sequence) or §11, this section wins. Sections 1–9 have been updated inline to match.
 
 ### Parts & data model
+
+- **Frame `dropout`** gained a `thru-axle` option.
+- **Wheel build details:** optional free-text `hub`, `spokes`, `nipples`, `rims` fields. The part card shows the wheel `position` (front/rear) so otherwise-identical wheels are distinguishable. `freehub_standard` uses `showWhen` so it only appears for **rear** wheels (front hubs have no freehub).
+- **Conditional fields (`showWhen`):** schema fields may render only when another field matches (see §6.1) — reactive with JS, always shown without JS.
 
 - **Quantity + multi-bike.** Parts gained a `quantity` (integer ≥ 1) and the single `bike` relation became a multi-relation **`bikes`** — a part can be installed on up to `quantity` bikes (one unit each). The cap is enforced in the add/edit form (UI disables extra bikes) and validated server-side. The add/edit form shows a quantity field and a bike checklist (not a single dropdown). Migrated by `server/pb_migrations/1700000005_parts_quantity_multibike.js`. Part cards, the detail page, and CSV export show quantity and all assigned bikes. (Supersedes §10 step 6's "bike dropdown" and §5.2's single `bike` field.)
 - **Bike deletion** removes that bike from each part's `bikes` array (parts kept), rather than nullifying a single relation (§6.4).

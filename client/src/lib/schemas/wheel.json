@@ -25,6 +25,7 @@
       "label": "Freehub / hub standard",
       "type": "select",
       "searchable": true,
+      "showWhen": { "field": "position", "in": ["rear"] },
       "hint": "Rear wheels only — determines compatible cassette speeds",
       "options": [
         "Shimano HG",
@@ -66,6 +67,10 @@
       "type": "select",
       "options": ["700c", "650b", "29\"", "27.5\"", "26\"", "24\"", "20\""]
     },
+    { "id": "hub", "label": "Hub", "type": "text", "searchable": true },
+    { "id": "spokes", "label": "Spokes", "type": "text", "searchable": true },
+    { "id": "nipples", "label": "Nipples", "type": "text", "searchable": true },
+    { "id": "rims", "label": "Rims", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

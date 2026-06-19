@@ -1,9 +1,9 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { untrack } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import FormField from './FormField.svelte';
   import { DISPOSITIONS } from '$lib/types';
-  import type { PartSchema } from '$lib/schema-utils';
+  import type { FieldDef, PartSchema } from '$lib/schema-utils';
 
   let {
     schema,
@@ -37,13 +37,31 @@
     else next.delete(id);
     selected = next;
   }
+
+  // Conditional fields (showWhen): reactive with JS, always shown with no JS.
+  let mounted = $state(false);
+  onMount(() => (mounted = true));
+  const liveValues = $state<Record<string, unknown>>(untrack(() => ({ ...attributes })));
+
+  function onFieldInput(e: Event) {
+    const el = e.target as HTMLInputElement | HTMLSelectElement | null;
+    if (el?.name?.startsWith('attr.')) liveValues[el.name.slice('attr.'.length)] = el.value;
+  }
+
+  function fieldShown(field: FieldDef): boolean {
+    if (!field.showWhen) return true;
+    if (!mounted) return true; // no-JS: always show conditional fields
+    return field.showWhen.in.includes(String(liveValues[field.showWhen.field] ?? ''));
+  }
 </script>
 
-<form method="POST" use:enhance class="space-y-2">
+<form method="POST" use:enhance oninput={onFieldInput} class="space-y-2">
   <input type="hidden" name="type_id" value={schema.type_id} />
 
   {#each schema.fields as field (field.id)}
-    <FormField {field} value={attributes[field.id]} error={errors[field.id]} />
+    {#if fieldShown(field)}
+      <FormField {field} value={attributes[field.id]} error={errors[field.id]} />
+    {/if}
   {/each}
 
   <fieldset class="mt-6 space-y-4 border-t border-border pt-6">
