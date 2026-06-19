@@ -14,7 +14,7 @@ export const load: PageServerLoad = async (event) => {
   const partCount = (
     await event.locals.pb
       .collection('parts')
-      .getList(1, 1, { filter: `owner = '${user.id}' && bike = '${event.params.id}'` })
+      .getList(1, 1, { filter: `owner = '${user.id}' && bikes.id ?= '${event.params.id}'` })
   ).totalItems;
 
   return { bike, partCount };
