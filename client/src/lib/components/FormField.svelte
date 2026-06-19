@@ -95,6 +95,7 @@
         value={strValue}
         required={field.required}
         inputmode={field.inputmode}
+        step={field.type === 'number' ? (field.inputmode === 'numeric' ? '1' : 'any') : undefined}
         autocomplete={autocomplete}
         aria-describedby={describedBy}
         aria-invalid={error ? 'true' : undefined}
