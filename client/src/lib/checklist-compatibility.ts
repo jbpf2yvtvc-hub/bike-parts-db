@@ -49,9 +49,10 @@ const ITEM_TYPE: Record<string, string> = {
   'brakes::lever': 'brake_lever',
   'wheels::front-wheel': 'wheel',
   'wheels::rear-wheel': 'wheel',
-  'seatpost::seatpost': 'seatpost',
-  'seatpost::seatpost-clamp': 'seatpost_clamp',
-  'seatpost::saddle': 'saddle'
+  // Seatpost & saddle now live under the Cockpit (stem) section.
+  'stem::seatpost': 'seatpost',
+  'stem::seatpost-clamp': 'seatpost_clamp',
+  'stem::saddle': 'saddle'
 };
 
 const isDisc = (cfg: ChecklistConfig) => cfg.brake === 'disc-short' || cfg.brake === 'disc-long';
@@ -81,7 +82,11 @@ export function getCompatibilityFilter(
       return "type_id='headset' && attributes.standard~'threadless'";
 
     case 'stem::stem-quill':
-      return "type_id='stem' && attributes.style~'quill'";
+      // Threaded steerer. With a stem converter, threadless stems are allowed
+      // too (a quill→threadless adapter); otherwise quill only.
+      return cfg.stem_converter
+        ? "type_id='stem' && (attributes.style~'quill' || attributes.style~'threadless')"
+        : "type_id='stem' && attributes.style~'quill'";
     case 'stem::stem-threadless':
       return "type_id='stem' && attributes.style~'threadless'";
 
@@ -157,11 +162,11 @@ export function getCompatibilityFilter(
       }
       return "type_id='wheel' && attributes.position='rear'"; // + freehub post-fetch (grouped)
 
-    case 'seatpost::seatpost':
+    case 'stem::seatpost':
       return "type_id='seatpost'";
-    case 'seatpost::seatpost-clamp':
+    case 'stem::seatpost-clamp':
       return "type_id='seatpost_clamp'";
-    case 'seatpost::saddle':
+    case 'stem::saddle':
       return "type_id='saddle'";
 
     default:

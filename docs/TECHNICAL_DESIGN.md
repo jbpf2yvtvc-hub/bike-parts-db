@@ -104,7 +104,7 @@ Conformance is built in from the start, verified at three levels (build-time, au
 
 **Perceivable:** All images carry `alt` (Svelte compiler enforces). Semantic landmarks (`<nav>`, `<main>`, `<header>`). Text contrast ≥ 4.5:1 (≥ 3:1 large). All sizing in `rem`; layout reflows with no horizontal scroll at 320 px width and survives 200% zoom. Disposition states convey meaning by icon + text + colour, never colour alone.
 
-**Operable:** Full keyboard operability; no keyboard traps (Melt UI manages focus traps with Escape release). Visible focus via `focus-visible:` utilities, never `outline:none` without replacement. Interactive targets ≥ 24×24 px (touch targets ≥ 44×44 px on mobile). Sticky-header offset handled with `scroll-margin-top` so focused elements are never obscured (SC 2.4.11).
+**Operable:** Full keyboard operability; no keyboard traps (Melt UI manages focus traps with Escape release). Visible focus via `focus-visible:` utilities, never `outline:none` without replacement. Buttons share a consistent affordance app-wide: a pointer cursor and the same visual change on hover **and** keyboard focus (§13). Interactive targets ≥ 24×24 px (touch targets ≥ 44×44 px on mobile). Sticky-header offset handled with `scroll-margin-top` so focused elements are never obscured (SC 2.4.11).
 
 **Understandable:** `<html lang="en">`. Correct `autocomplete` attributes on all inputs (SC 1.3.5). No navigation or submission on `change` alone. Errors identified in text, associated to fields via `aria-describedby`. Authentication imposes no cognitive test; password fields allow paste; passkeys (later) remove recall entirely (SC 3.3.8).
 
@@ -416,7 +416,8 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 | `frame::fork` | `brake:canti\|cp\|vbrake` | `type_id='fork' && attributes.brake_mount~'boss'` | — |
 | `frame::headset-threaded` | `fork:threaded` | `type_id='headset' && attributes.standard~'threaded'` | — |
 | `frame::headset-threadless` | `fork:threadless` | `type_id='headset' && attributes.standard~'threadless'` | — |
-| `stem::stem-quill` | `fork:threaded` | `type_id='stem' && attributes.style~'quill'` | — |
+| `stem::stem-quill` | `fork:threaded`, no converter | `type_id='stem' && attributes.style~'quill'` | — |
+| `stem::stem-quill` | `fork:threaded`, stem converter on | `type_id='stem' && (attributes.style~'quill' \|\| attributes.style~'threadless')` | — |
 | `stem::stem-threadless` | `fork:threadless` | `type_id='stem' && attributes.style~'threadless'` | — |
 | `bb::bottom-bracket` | `tension≠ebb` | `type_id='bottom_bracket'` | — |
 | `bb::eccentric-bb` | `rear_speeds:1 && tension:ebb` | `type_id='eccentric_bb'` | — |
@@ -447,16 +448,20 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 | `wheels::front-wheel` | `brake:canti\|vbrake\|cp` | `type_id='wheel' && attributes.position='front' && attributes.brake_type~'rim'` | — |
 | `wheels::rear-wheel` | `rear_speeds:1` | `type_id='wheel' && attributes.position='rear' && attributes.freehub_standard~'track\|flip-flop\|single-speed'` | — |
 | `wheels::rear-wheel` | `rear_speeds:6–12` | `type_id='wheel' && attributes.position='rear'` | `freehubCompatible(...)`; incompatible wheels shown in a separate "Incompatible with current configuration" group, **not hidden** |
-| `seatpost::seatpost` | always | `type_id='seatpost'` | — |
-| `seatpost::saddle` | always | `type_id='saddle'` | — |
-| `seatpost::seatpost-clamp` | frame has no integrated clamp | `type_id='seatpost_clamp'` | — |
-| `seatpost::binder-bolt` | frame has integrated clamp | — (no picker; check-off only) | — |
+| `stem::seatpost` | always | `type_id='seatpost'` | — |
+| `stem::saddle` | always | `type_id='saddle'` | — |
+| `stem::seatpost-clamp` | frame has no integrated clamp | `type_id='seatpost_clamp'` | — |
+| `stem::binder-bolt` | frame has integrated clamp | — (no picker; check-off only) | — |
 
 **Two-step filtering** (used where a row has a post-fetch filter): PocketBase cannot run the freehub matrix, so the server first queries by `type_id`/attributes, then applies the TS predicate in the SvelteKit `load()` before rendering. This is fine at personal-inventory scale (hundreds of parts). At very large scale it would need denormalising; see §11 risks.
 
 **Shifting mode (friction vs indexed).** The config carries `front_shifting` and `rear_shifting` (`indexed` | `friction`), surfaced as selects on the left/right shifter items, which live at the top of the Drivetrain section (above the derailleurs they constrain; they belong to the configurator form via the `form` attribute, so they persist with the rest of the config, no-JS too). **Indexed** requires an exact speed match (rear derailleur `speed = rear_speeds`; front derailleur `max_chainrings = chainrings`). **Friction** relaxes this to "supports *at least* that many" via a post-fetch numeric predicate — e.g. a 9-speed rear derailleur is offered for a 7-speed build, and a triple front derailleur for a double. Auto-link (`matchItemForPart`) uses the same filters.
 
-**Frame-driven seatpost item.** The linked frame's `integrated_seatpost_clamp` attribute decides the seatpost section: when **false** the list shows **Seatpost clamp (collar)** (`seatpost::seatpost-clamp`, links to a `seatpost_clamp` part); when **true** it instead shows **Binder bolt (standard or QR)** (`seatpost::binder-bolt`, a check-off item with no picker, since a binder bolt isn't tracked as inventory). This is threaded into item visibility via a `ChecklistContext` derived from the build's frame.
+**Seatpost & saddle live under Cockpit.** The seatpost, saddle, and seatpost-clamp/binder-bolt items are part of the **Cockpit** (`stem`) section — there is no separate "Seatpost & saddle" section. Their keys are `stem::seatpost`, `stem::saddle`, `stem::seatpost-clamp`, `stem::binder-bolt`.
+
+**Frame-driven seatpost item.** The linked frame's `integrated_seatpost_clamp` attribute decides which of those shows: when **false** the list shows **Seatpost clamp (collar)** (`stem::seatpost-clamp`, links to a `seatpost_clamp` part); when **true** it instead shows **Binder bolt (standard or QR)** (`stem::binder-bolt`, a check-off item with no picker, since a binder bolt isn't tracked as inventory). This is threaded into item visibility via a `ChecklistContext` derived from the build's frame.
+
+**Stem converter (threaded steerers).** When `fork = threaded`, the quill-stem item shows a **"Use a stem converter"** checkbox (`config.stem_converter`). With it on, the quill picker also offers **threadless** stems (a quill→threadless adapter). Linking an actual **quill** stem turns the converter back off (`linkPart`). The flag is forced off whenever the steerer isn't threaded.
 
 **Picker behaviour:**
 - Linked part shows type + key attributes + current bike: "On this bike ✓", "📍 On: <bike name>", or "In inventory · not on a bike".
@@ -590,7 +595,10 @@ These changes were made after the initial v1.0 build and are live. Where they di
 - **View filter — All / Installed / Needed.** No-JS via `?view=`; JS filters in place. Checked-but-hidden items are preserved as hidden inputs so a no-JS Save never drops them. (Replaces the original artifact's in-checklist text search.)
 - **Friction vs indexed shifting.** Config carries `front_shifting` / `rear_shifting`. Indexed = exact derailleur speed/chainring match; friction = "supports at least N" (post-fetch numeric). Surfaced as selects on the shifter items.
 - **Shifters live in the Drivetrain section**, at the top (above the derailleurs they constrain) — the standalone "Shifting" section was removed. Item keys are `drivetrain::left-shifter` / `drivetrain::right-shifter`.
-- **Frame-driven seatpost item.** When the linked frame's `integrated_seatpost_clamp` is true, the list shows `seatpost::binder-bolt` (a check-off item, no picker) instead of `seatpost::seatpost-clamp`. Threaded through visibility via a `ChecklistContext`.
+- **Frame-driven seatpost item.** When the linked frame's `integrated_seatpost_clamp` is true, the list shows the binder-bolt item (a check-off item, no picker) instead of the seatpost-clamp item. Threaded through visibility via a `ChecklistContext`.
+- **Seatpost & saddle moved under Cockpit.** The seatpost/saddle/clamp items now live in the **Cockpit** (`stem`) section; the standalone "Seatpost & saddle" section was removed. Item keys changed `seatpost::*` → `stem::*` (compatibility map + filters updated).
+- **Stem converter (threaded steerers).** A `config.stem_converter` flag, surfaced as a checkbox on the quill-stem item when `fork = threaded`. When on, the quill picker also offers threadless stems; linking an actual quill stem turns it back off; it's forced off when the steerer isn't threaded.
+- **Consistent button affordance.** Global CSS gives every `<button>` (and any link with `class="btn"`) a pointer cursor, a smooth transition, and the **same** visual change (`brightness`) on hover **and** keyboard focus (`focus-visible`); disabled buttons show `not-allowed`. Button-styled links across the app opt in via the `btn` class.
 - **Configurator persistence fix.** The config save now uses an absolute URL (`/bikes/<id>/checklist/config`); the previous relative URL resolved to the wrong path and silently dropped config changes.
 - **Linking assigns to the bike + switch-on-conflict.** *Link* in the picker now puts the part on the current bike (consuming a unit). When a part is fully assigned to other bikes, the picker shows **Switch to this bike**, which confirms via a dialog (no-JS: a confirm page) and then moves one unit from a prior bike to this one — and if the part is on several other bikes, the dialog lets you choose which one it comes off. The **[+ Add a new part]** / **[Show all parts anyway]** actions moved to an always-visible toolbar, so adding a part is possible even when every listed part is already in use.
 

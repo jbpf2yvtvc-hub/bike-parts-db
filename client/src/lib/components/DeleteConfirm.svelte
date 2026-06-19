@@ -33,7 +33,7 @@
     e.preventDefault();
     open.set(true);
   }}
-  class="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-red-500/50 px-4 py-2 font-medium text-red-400 hover:bg-red-500/10"
+  class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-red-500/50 px-4 py-2 font-medium text-red-400 hover:bg-red-500/10"
 >
   <Trash2 size={18} aria-hidden="true" />
   {label}

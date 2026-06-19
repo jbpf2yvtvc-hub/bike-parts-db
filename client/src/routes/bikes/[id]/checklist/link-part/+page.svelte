@@ -32,12 +32,12 @@
 <div class="mb-6 flex flex-wrap gap-3">
   <a
     href={addHref}
-    class="inline-flex min-h-[44px] items-center gap-1 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
+    class="btn inline-flex min-h-[44px] items-center gap-1 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
   >
     <Plus size={16} aria-hidden="true" /> Add a new part
   </a>
   {#if !data.showAll}
-    <a href={showAllHref} class="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 font-medium">
+    <a href={showAllHref} class="btn inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 font-medium">
       Show all parts anyway
     </a>
   {/if}

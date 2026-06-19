@@ -181,9 +181,18 @@ export const actions: Actions = {
       ? progress.checked_items
       : [];
     const checked = [...new Set([...checkedItems, itemKey])];
-    await pb
-      .collection('checklist_progress')
-      .update(progress.id, { part_links: links, checked_items: checked });
+
+    const update: Record<string, unknown> = { part_links: links, checked_items: checked };
+
+    // Linking an actual quill stem means no converter is needed — turn it off.
+    if (
+      itemKey === 'stem::stem-quill' &&
+      String((part as any).attributes?.style ?? '').toLowerCase().includes('quill')
+    ) {
+      update.config = { ...normalizeConfig(progress.config), stem_converter: false };
+    }
+
+    await pb.collection('checklist_progress').update(progress.id, update);
 
     throw redirect(303, back);
   }

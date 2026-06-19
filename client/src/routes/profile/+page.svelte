@@ -72,7 +72,7 @@
 
 <div class="mt-10 border-t border-border pt-6">
   <h2 class="mb-3 font-condensed text-xl font-semibold">Your data</h2>
-  <a href="/export" class="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
+  <a href="/export" class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
     <Download size={18} aria-hidden="true" /> Export all data (CSV)
   </a>
 </div>

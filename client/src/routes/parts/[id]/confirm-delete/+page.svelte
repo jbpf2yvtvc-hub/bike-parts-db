@@ -20,7 +20,7 @@
   {/if}
 
   <div class="mt-6 flex justify-end gap-3">
-    <a href={`/parts/${data.partId}`} class="min-h-[44px] rounded-md border border-border px-4 py-2 font-medium">Cancel</a>
+    <a href={`/parts/${data.partId}`} class="btn min-h-[44px] rounded-md border border-border px-4 py-2 font-medium">Cancel</a>
     <form method="POST">
       <button type="submit" class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-red-600 px-4 py-2 font-medium text-white">
         <Trash2 size={18} aria-hidden="true" /> Delete

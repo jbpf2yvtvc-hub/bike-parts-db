@@ -83,9 +83,13 @@ export function normalizeConfig(raw: Record<string, unknown> | null | undefined)
     rear_speeds: pick(r.rear_speeds, REAR_SPEEDS, DEFAULT_CONFIG.rear_speeds),
     tension: pick(r.tension, TENSIONS, DEFAULT_CONFIG.tension),
     front_shifting: pick(r.front_shifting, SHIFTING, DEFAULT_CONFIG.front_shifting),
-    rear_shifting: pick(r.rear_shifting, SHIFTING, DEFAULT_CONFIG.rear_shifting)
+    rear_shifting: pick(r.rear_shifting, SHIFTING, DEFAULT_CONFIG.rear_shifting),
+    // Checkboxes arrive as boolean (JSON) or 'on'/'true' (form data).
+    stem_converter: r.stem_converter === true || r.stem_converter === 'on' || r.stem_converter === 'true'
   };
   // The `tension` axis only applies to single-speed builds (§9.3).
   if (cfg.rear_speeds !== '1') cfg.tension = 'horizontal';
+  // A stem converter only makes sense on a threaded steerer.
+  if (cfg.fork !== 'threaded') cfg.stem_converter = false;
   return cfg;
 }

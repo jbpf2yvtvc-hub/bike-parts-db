@@ -8,7 +8,7 @@
 
 <div class="mb-6 flex items-center justify-between">
   <h1 class="font-display text-3xl tracking-wide text-accent">Bikes</h1>
-  <a href="/bikes/new" class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
+  <a href="/bikes/new" class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
     <Plus size={18} aria-hidden="true" /> Add
   </a>
 </div>

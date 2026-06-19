@@ -62,7 +62,7 @@
 </div>
 
 <div class="mt-6 flex flex-wrap gap-3">
-  <a href={`/parts/${part.id}/edit`} class="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
+  <a href={`/parts/${part.id}/edit`} class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
     <Pencil size={18} aria-hidden="true" /> Edit
   </a>
   <DeleteConfirm

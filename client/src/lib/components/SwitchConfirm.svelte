@@ -38,7 +38,7 @@
     e.preventDefault();
     open.set(true);
   }}
-  class="inline-flex min-h-[44px] items-center gap-1 rounded-md border border-accent px-4 py-2 font-medium text-accent hover:bg-accent/10"
+  class="btn inline-flex min-h-[44px] items-center gap-1 rounded-md border border-accent px-4 py-2 font-medium text-accent hover:bg-accent/10"
 >
   <ArrowLeftRight size={16} aria-hidden="true" />
   Switch to this bike

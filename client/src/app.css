@@ -75,6 +75,34 @@ details[open] > summary .chevron {
   transform: rotate(180deg);
 }
 
+/* ---------------------------------------------------------------------------
+   Consistent button behaviour across the app. Every <button> and any
+   button-styled link (class="btn") shares: a pointer cursor, a smooth
+   transition, and the SAME visual change on hover AND keyboard focus
+   (focus-visible) for accessibility. Disabled controls show not-allowed.
+   --------------------------------------------------------------------------- */
+button,
+.btn {
+  transition:
+    filter 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+button:not(:disabled),
+.btn,
+[role='button'] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button:not(:disabled):hover,
+button:not(:disabled):focus-visible,
+.btn:hover,
+.btn:focus-visible {
+  filter: brightness(1.12);
+}
+
 /* Visible, non-removed focus everywhere (SC 2.4.7). Never outline:none. */
 :focus-visible {
   outline: 3px solid var(--color-accent);

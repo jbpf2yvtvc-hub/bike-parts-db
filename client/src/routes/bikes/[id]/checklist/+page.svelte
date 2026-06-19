@@ -69,8 +69,10 @@
   let chkTimer: ReturnType<typeof setTimeout>;
 
   function onConfigChange() {
-    // Mirror the server-side normalisation: tension only applies to 1-speed.
+    // Mirror the server-side normalisation: tension only applies to 1-speed,
+    // and a stem converter only to a threaded steerer.
     if (config.rear_speeds !== '1') config.tension = 'horizontal';
+    if (config.fork !== 'threaded') config.stem_converter = false;
     clearTimeout(cfgTimer);
     cfgTimer = setTimeout(async () => {
       // Absolute path — a relative 'config' would resolve to /bikes/<id>/config
@@ -233,7 +235,7 @@
       href={f.value === 'all' ? '?' : `?view=${f.value}`}
       onclick={(e) => selectView(e, f.value)}
       aria-current={view === f.value ? 'true' : undefined}
-      class="min-h-[44px] rounded px-4 py-2 text-sm font-medium {view === f.value
+      class="btn min-h-[44px] rounded px-4 py-2 text-sm font-medium {view === f.value
         ? 'bg-accent text-accent-ink'
         : 'text-ink-muted hover:text-ink'}"
     >
@@ -327,6 +329,20 @@
                     <option value="indexed">indexed</option>
                     <option value="friction">friction</option>
                   </select>
+                </label>
+              {:else if key === 'stem::stem-quill'}
+                <!-- Threaded steerer: a stem converter lets threadless stems be
+                     linked. Belongs to the configurator form so it persists. -->
+                <label class="mt-3 flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    form="configurator"
+                    name="stem_converter"
+                    bind:checked={config.stem_converter}
+                    onchange={onConfigChange}
+                    class="h-4 w-4 rounded border-border bg-surface-2"
+                  />
+                  <span class="text-ink-muted">Use a stem converter (allow threadless stems)</span>
                 </label>
               {/if}
 

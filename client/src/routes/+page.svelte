@@ -24,10 +24,10 @@
 </div>
 
 <div class="mb-4 flex gap-3">
-  <a href="/parts/new" class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
+  <a href="/parts/new" class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
     <Plus size={18} aria-hidden="true" /> Add part
   </a>
-  <a href="/bikes/new" class="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
+  <a href="/bikes/new" class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
     <Plus size={18} aria-hidden="true" /> Add bike
   </a>
 </div>

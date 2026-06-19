@@ -31,6 +31,9 @@ export interface ChecklistConfig {
    *  "supports at least N speeds" instead of exact (§9.5). */
   front_shifting: ShiftingMode;
   rear_shifting: ShiftingMode;
+  /** Threaded steerers only: use a quill→threadless stem converter, which lets
+   *  threadless stems be linked. Forced false unless fork is `threaded`. */
+  stem_converter: boolean;
 }
 
 /**
@@ -49,7 +52,8 @@ export const DEFAULT_CONFIG: ChecklistConfig = {
   rear_speeds: '10',
   tension: 'horizontal',
   front_shifting: 'indexed',
-  rear_shifting: 'indexed'
+  rear_shifting: 'indexed',
+  stem_converter: false
 };
 
 type Dyn<T> = T | ((cfg: ChecklistConfig) => T);
@@ -106,14 +110,31 @@ export const SECTIONS: ChecklistSection[] = [
     items: [
       {
         id: 'stem-quill',
-        t: 'Stem — quill',
+        t: (cfg) =>
+          cfg.stem_converter ? 'Stem — quill or threadless (converter)' : 'Stem — quill',
         visible: (cfg) => cfg.fork === 'threaded'
       },
       {
         id: 'stem-threadless',
         t: 'Stem — threadless',
         visible: (cfg) => cfg.fork === 'threadless'
-      }
+      },
+      // Seatpost & saddle now live under Cockpit (no separate section).
+      { id: 'seatpost', t: 'Seatpost' },
+      {
+        id: 'seatpost-clamp',
+        t: 'Seatpost clamp (collar)',
+        // Hidden when the frame has an integrated clamp (binder bolt instead).
+        visible: (_cfg, ctx) => !ctx.frameIntegratedClamp
+      },
+      {
+        id: 'binder-bolt',
+        t: 'Binder bolt (standard or QR)',
+        n: 'The frame has an integrated seatpost clamp — you just need the binder bolt (a standard bolt or a quick-release).',
+        // Shown only when the frame has an integrated clamp. No part picker.
+        visible: (_cfg, ctx) => !!ctx.frameIntegratedClamp
+      },
+      { id: 'saddle', t: 'Saddle' }
     ]
   },
   {
@@ -237,27 +258,6 @@ export const SECTIONS: ChecklistSection[] = [
             ? 'Single-speed / track / flip-flop rear hub.'
             : 'Incompatible-freehub wheels you own are shown in a separate group, not hidden.'
       }
-    ]
-  },
-  {
-    id: 'seatpost',
-    title: 'Seatpost & saddle',
-    items: [
-      { id: 'seatpost', t: 'Seatpost' },
-      {
-        id: 'seatpost-clamp',
-        t: 'Seatpost clamp (collar)',
-        // Hidden when the frame has an integrated clamp (binder bolt instead).
-        visible: (_cfg, ctx) => !ctx.frameIntegratedClamp
-      },
-      {
-        id: 'binder-bolt',
-        t: 'Binder bolt (standard or QR)',
-        n: 'The frame has an integrated seatpost clamp — you just need the binder bolt (a standard bolt or a quick-release).',
-        // Shown only when the frame has an integrated clamp. No part picker.
-        visible: (_cfg, ctx) => !!ctx.frameIntegratedClamp
-      },
-      { id: 'saddle', t: 'Saddle' }
     ]
   }
 ];
