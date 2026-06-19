@@ -21,7 +21,7 @@
   } = $props();
 
   const {
-    elements: { overlay, content, title: titleEl, description, close, portalled },
+    elements: { overlay, content, title: titleEl, description, portalled },
     states: { open }
   } = createDialog({ role: 'alertdialog', forceVisible: true });
 </script>
@@ -54,8 +54,8 @@
 
       <form method="POST" {action} use:enhance class="mt-6 flex justify-end gap-3">
         <button
-          use:melt={$close}
           type="button"
+          onclick={() => open.set(false)}
           class="min-h-[44px] rounded-md border border-border px-4 py-2 text-ink"
         >
           Cancel
