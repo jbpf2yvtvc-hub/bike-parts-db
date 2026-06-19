@@ -12,7 +12,30 @@ assemble a bike and links each line item to parts already in your inventory.
 > PocketBase access goes through SvelteKit server-side code under
 > `client/src/lib/server/**`.
 
-See [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md) for the full spec.
+See [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md) for the full spec
+(§13 is the changelog of changes since the initial build).
+
+---
+
+## Features
+
+- **Schema-driven parts.** Each part type is a JSON file in `schemas/`; forms,
+  Zod validation, search, and checklist filters all derive from it. 21 types
+  ship (frame, fork, drivetrain, wheels, brakes, single-speed, etc.).
+- **Quantity & multi-bike.** A part has a quantity and can be installed on up to
+  that many bikes (one unit each); the add/edit form caps the selection.
+- **Bikes** with their own records; parts reference the bikes they're on.
+- **Build Checklist** per bike: a 6-axis configurator (steerer, handlebar,
+  brake, chainrings, rear speeds, chain tension) with friction/indexed shifting,
+  cross-axis visibility, freehub × speed compatibility, collapsible sections, an
+  All / Installed / Needed view filter, and progress.
+  - **Part linking** with compatibility pre-filtering; parts installed on the
+    bike **auto-link** and auto-check their item.
+- **Search** across parts (keyword + metadata), **CSV export** (parts + bikes).
+- **Auth**: email/password, password reset, email-OTP MFA-ready, immutable
+  username; sessions in an HttpOnly cookie set server-side.
+- **Accessibility**: WCAG 2.2 AA, mobile-first, no-JS-first (JS only enhances);
+  axe-core CI on every route.
 
 ---
 

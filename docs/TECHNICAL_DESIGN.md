@@ -1,11 +1,11 @@
 # Bike Parts DB — Technical Design & Build Specification
 
-**Version:** 1.0 (Consolidated, build-ready)
+**Version:** 1.0 (Consolidated, build-ready) + post-1.0 revisions
 **Supersedes:** v0.1 through v0.5 (all prior versions folded in; corrections applied)
-**Status:** Ready for implementation
+**Status:** Built and in use. Sections 1–9 are kept current with the running app; **§13 is the changelog of changes made since the initial v1.0 build** and is authoritative where it differs from the original build sequence.
 **Intended build environment:** Claude Code (CLI or VS Code/desktop extension)
 
-> This is a single self-contained specification. It does not refer back to earlier versions — everything needed to start building is here. Sections 1–8 define the application; Section 9 defines the Build Checklist feature; Section 10 is the ordered Claude Code build sequence; Section 11 lists corrections made during final review and known risks.
+> This is a single self-contained specification. It does not refer back to earlier versions — everything needed to start building is here. Sections 1–8 define the application; Section 9 defines the Build Checklist feature; Section 10 is the **original** ordered Claude Code build sequence (historical — see §13 for subsequent changes); Section 11 lists corrections made during final review and known risks; Section 13 records post-v1.0 changes.
 
 ---
 
@@ -196,7 +196,7 @@ All collections enforce owner-scoped read/write rules so a user can only ever ac
 users ──< bikes
 users ──< parts
 users ──< checklist_progress
-parts >── bikes              (a part may be on one bike)
+parts >──< bikes             (a part may be on up to `quantity` bikes; see §13)
 checklist_progress >── bikes (one progress doc per bike)
 ```
 
@@ -357,7 +357,7 @@ Cloudflare Pages and Railway both auto-deploy on push to `main` once connected t
 
 ### 9.1 Overview
 
-The Build Checklist is a configuration-driven assembly guide, ported from the existing standalone HTML checklist artifact and accessed at `/bikes/[id]/checklist` — always tied to a specific bike. It keeps all original behaviour (configurator-driven visibility, conditional notes/warnings, collapsible sections, search, progress) and adds inventory linking: each line item can be linked to a part the user owns, showing whether that part is already on a bike and which one.
+The Build Checklist is a configuration-driven assembly guide, ported from the existing standalone HTML checklist artifact and accessed at `/bikes/[id]/checklist` — always tied to a specific bike. It keeps the original behaviour (configurator-driven visibility, conditional notes/warnings, collapsible sections, progress) plus a view filter (All / Installed / Needed, §13) and adds inventory linking: each line item can be linked to a part the user owns — and parts installed on the bike auto-link — showing whether that part is already on a bike and which one.
 
 Progress and configuration persist in the `checklist_progress` PocketBase record for that bike (not localStorage).
 
@@ -566,3 +566,35 @@ Each step is a discrete Claude Code session. Hand them over in order. Steps 1–
 | Railway | https://docs.railway.app/ |
 | Cloudflare Pages | https://developers.cloudflare.com/pages/ |
 | Cloudflare R2 | https://developers.cloudflare.com/r2/ |
+
+---
+
+## 13. Changes since v1.0 (current state)
+
+These changes were made after the initial v1.0 build and are live. Where they differ from §10 (the original build sequence) or §11, this section wins. Sections 1–9 have been updated inline to match.
+
+### Parts & data model
+
+- **Quantity + multi-bike.** Parts gained a `quantity` (integer ≥ 1) and the single `bike` relation became a multi-relation **`bikes`** — a part can be installed on up to `quantity` bikes (one unit each). The cap is enforced in the add/edit form (UI disables extra bikes) and validated server-side. The add/edit form shows a quantity field and a bike checklist (not a single dropdown). Migrated by `server/pb_migrations/1700000005_parts_quantity_multibike.js`. Part cards, the detail page, and CSV export show quantity and all assigned bikes. (Supersedes §10 step 6's "bike dropdown" and §5.2's single `bike` field.)
+- **Bike deletion** removes that bike from each part's `bikes` array (parts kept), rather than nullifying a single relation (§6.4).
+- **Frame `integrated_seatpost_clamp`** (bool) added — drives the seatpost section of the checklist (see below).
+- **Handlebar `style`** gained `cruiser/multi-position` and `alt bars`.
+
+### Build Checklist
+
+- **Auto-link from bike assignment.** Any part whose `bikes` include the checklist's bike is matched to its item (via `matchItemForPart`, which evaluates the item's existing compatibility filter) and shown as linked automatically — no manual step. Implied (on-bike) links take precedence over manual links; auto-linked items show *View part / Edit · reassign* instead of *Unlink*.
+- **Linking auto-checks the item.** A linked item's checkbox renders checked + disabled; unlinking re-enables it. Linked keys are unioned into `checked_items` on save so a disabled (non-submitting) checkbox is never lost. (Supersedes the original "checking and linking are independent.")
+- **Collapsible sections.** Each section is a native `<details open>` (works with no JS) with a rotating chevron and a per-section done/total count.
+- **View filter — All / Installed / Needed.** No-JS via `?view=`; JS filters in place. Checked-but-hidden items are preserved as hidden inputs so a no-JS Save never drops them. (Replaces the original artifact's in-checklist text search.)
+- **Friction vs indexed shifting.** Config carries `front_shifting` / `rear_shifting`. Indexed = exact derailleur speed/chainring match; friction = "supports at least N" (post-fetch numeric). Surfaced as selects on the shifter items.
+- **Shifters live in the Drivetrain section**, at the top (above the derailleurs they constrain) — the standalone "Shifting" section was removed. Item keys are `drivetrain::left-shifter` / `drivetrain::right-shifter`.
+- **Frame-driven seatpost item.** When the linked frame's `integrated_seatpost_clamp` is true, the list shows `seatpost::binder-bolt` (a check-off item, no picker) instead of `seatpost::seatpost-clamp`. Threaded through visibility via a `ChecklistContext`.
+- **Configurator persistence fix.** The config save now uses an absolute URL (`/bikes/<id>/checklist/config`); the previous relative URL resolved to the wrong path and silently dropped config changes.
+
+### Look & feel
+
+- **Heading typeface** is **Montserrat**, all-caps, app-wide (replacing the original Bebas Neue + Barlow Condensed of §9.6 / §10 step 18). The sidebar brand is semibold. Body text remains `system-ui`.
+
+### Tooling / CI
+
+- **`deploy.yml` skips gracefully** when `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` are absent (the job passes with a notice instead of failing), so unconfigured repos don't accumulate failed runs.
