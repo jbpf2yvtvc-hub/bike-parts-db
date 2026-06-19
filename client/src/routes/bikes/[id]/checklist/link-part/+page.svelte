@@ -2,10 +2,17 @@
   import { getLabel } from '$lib/schema-utils';
   import { Plus, Check } from '@lucide/svelte';
   import { untrack } from 'svelte';
+  import SwitchConfirm from '$lib/components/SwitchConfirm.svelte';
   let { data }: { data: any } = $props();
 
   const bikeId = untrack(() => data.bike.id);
   const backHref = `/bikes/${bikeId}/checklist`;
+  const addHref = $derived(`/parts/new?type=${data.typeId ?? ''}`);
+  const showAllHref = $derived(
+    `/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(data.itemKey)}&all=1`
+  );
+  const switchHref = (partId: string) =>
+    `/bikes/${bikeId}/checklist/link-part/switch?item=${encodeURIComponent(data.itemKey)}&partId=${partId}`;
 </script>
 
 <svelte:head><title>Link a part · {data.itemTitle}</title></svelte:head>
@@ -17,9 +24,24 @@
 </nav>
 
 <h1 class="mb-1 font-display text-3xl tracking-wide text-accent">Link a part</h1>
-<p class="mb-6 font-condensed text-lg text-ink-muted">
+<p class="mb-4 font-condensed text-lg text-ink-muted">
   {data.itemTitle}{#if data.typeId} · {getLabel(data.typeId)}{/if}
 </p>
+
+<!-- Always available, regardless of how many parts (if any) are listed. -->
+<div class="mb-6 flex flex-wrap gap-3">
+  <a
+    href={addHref}
+    class="inline-flex min-h-[44px] items-center gap-1 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
+  >
+    <Plus size={16} aria-hidden="true" /> Add a new part
+  </a>
+  {#if !data.showAll}
+    <a href={showAllHref} class="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 font-medium">
+      Show all parts anyway
+    </a>
+  {/if}
+</div>
 
 {#snippet partRow(p: any)}
   <li class="rounded-lg border border-border bg-surface p-4">
@@ -42,16 +64,33 @@
           </span>
         </p>
       </div>
-      <form method="POST" action="?/linkPart">
-        <input type="hidden" name="item" value={data.itemKey} />
-        <input type="hidden" name="partId" value={p.id} />
-        <button
-          type="submit"
-          class="inline-flex min-h-[44px] items-center gap-1 rounded-md px-4 py-2 font-medium {data.linkedPartId === p.id ? 'border border-accent text-accent' : 'bg-accent text-accent-ink'}"
-        >
-          {#if data.linkedPartId === p.id}<Check size={16} aria-hidden="true" /> Linked{:else}Link{/if}
-        </button>
-      </form>
+
+      <div class="shrink-0">
+        {#if data.linkedPartId === p.id}
+          <span class="inline-flex min-h-[44px] items-center gap-1 rounded-md border border-accent px-4 py-2 font-medium text-accent">
+            <Check size={16} aria-hidden="true" /> Linked
+          </span>
+        {:else if !p.onThisBike && p.available <= 0}
+          <!-- Fully assigned elsewhere — confirm a switch before moving it. -->
+          <SwitchConfirm
+            confirmHref={switchHref(p.id)}
+            action="?/linkPart"
+            item={data.itemKey}
+            partId={p.id}
+            partTitle={p.title}
+            priorBikeName={p.priorBikeName}
+            thisBikeName={data.bike.name}
+          />
+        {:else}
+          <form method="POST" action="?/linkPart">
+            <input type="hidden" name="item" value={data.itemKey} />
+            <input type="hidden" name="partId" value={p.id} />
+            <button type="submit" class="inline-flex min-h-[44px] items-center rounded-md bg-accent px-4 py-2 font-medium text-accent-ink">
+              Link
+            </button>
+          </form>
+        {/if}
+      </div>
     </div>
   </li>
 {/snippet}
@@ -63,25 +102,10 @@
     {/each}
   </ul>
 {:else}
-  <div class="rounded-lg border border-border bg-surface p-6 text-center">
-    <p class="mb-4 text-ink-muted">No compatible parts found.</p>
-    <div class="flex flex-wrap justify-center gap-3">
-      <a
-        href={`/parts/new${data.typeId ? `?type=${data.typeId}` : ''}`}
-        class="inline-flex min-h-[44px] items-center gap-1 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
-      >
-        <Plus size={16} aria-hidden="true" /> Add a new part
-      </a>
-      {#if !data.showAll}
-        <a
-          href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(data.itemKey)}&all=1`}
-          class="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 font-medium"
-        >
-          Show all parts anyway
-        </a>
-      {/if}
-    </div>
-  </div>
+  <p class="rounded-lg border border-border bg-surface p-6 text-center text-ink-muted">
+    No compatible parts found. Use <strong class="text-ink">Add a new part</strong> above{#if !data.showAll}, or
+    <strong class="text-ink">Show all parts anyway</strong>{/if}.
+  </p>
 {/if}
 
 {#if data.incompatible.length}

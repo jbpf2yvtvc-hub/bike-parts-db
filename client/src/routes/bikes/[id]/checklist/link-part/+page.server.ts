@@ -1,7 +1,11 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
-import { getOrCreateProgress, normalizeConfig } from '$lib/server/checklist';
+import {
+  getOrCreateProgress,
+  normalizeConfig,
+  removePartFromBikeLinks
+} from '$lib/server/checklist';
 import { findItem, getTitle } from '$lib/checklist-data';
 import { getLabel } from '$lib/schema-utils';
 import {
@@ -29,14 +33,25 @@ function summarize(part: any, bikeId: string) {
     .filter((b: any) => b.id !== bikeId)
     .map((b: any) => b.name);
   const quantity = part.quantity ?? 1;
+  const onThisBike = bikeIds.includes(bikeId);
   const available = Math.max(0, quantity - bikeIds.length); // units not yet on a bike
 
   let status: string;
-  if (bikeIds.includes(bikeId)) status = 'On this bike ✓';
+  if (onThisBike) status = 'On this bike ✓';
   else if (otherBikeNames.length) status = `📍 On: ${otherBikeNames.join(', ')}`;
   else status = 'In inventory · not on a bike';
 
-  return { id: part.id, type_id: part.type_id, title, keyAttrs, status, quantity, available };
+  return {
+    id: part.id,
+    type_id: part.type_id,
+    title,
+    keyAttrs,
+    status,
+    quantity,
+    available,
+    onThisBike,
+    priorBikeName: otherBikeNames.join(', ')
+  };
 }
 
 export const load: PageServerLoad = async (event) => {
@@ -108,30 +123,65 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+  // Link a part to this item AND put it on this bike (consuming one unit of its
+  // quantity). If every unit is already on other bikes, the part must be
+  // *switched* — that requires `confirm=1` (the picker surfaces a dialog / a
+  // no-JS confirm page); without it we bounce to the confirm page.
   linkPart: async (event) => {
     const user = requireUser(event);
     const pb = event.locals.pb;
+    const bikeId = event.params.id;
     const form = await event.request.formData();
     const itemKey = String(form.get('item') ?? '');
     const partId = String(form.get('partId') ?? '');
-    if (!itemKey || !partId) throw redirect(303, `/bikes/${event.params.id}/checklist`);
+    const confirmed = String(form.get('confirm') ?? '') === '1';
+    const back = `/bikes/${bikeId}/checklist`;
+    if (!itemKey || !partId) throw redirect(303, back);
 
-    const progress = await getOrCreateProgress(pb, event.params.id, user.id);
+    let part;
+    try {
+      part = await pb.collection('parts').getOne(partId);
+    } catch {
+      throw redirect(303, back);
+    }
+
+    const quantity = (part.quantity as number) || 1;
+    let bikes: string[] = Array.isArray(part.bikes) ? [...part.bikes] : [];
+
+    if (!bikes.includes(bikeId)) {
+      if (bikes.length < quantity) {
+        // A free unit is available — just put it on this bike.
+        bikes.push(bikeId);
+        await pb.collection('parts').update(partId, { bikes });
+      } else if (confirmed) {
+        // Fully assigned elsewhere — switch one unit from its prior bike.
+        const prior = bikes.find((b) => b !== bikeId);
+        bikes = bikes.filter((b) => b !== prior);
+        bikes.push(bikeId);
+        await pb.collection('parts').update(partId, { bikes });
+        if (prior) await removePartFromBikeLinks(pb, prior, partId);
+      } else {
+        // Needs confirmation (no-JS path; the JS dialog posts confirm=1).
+        throw redirect(
+          303,
+          `/bikes/${bikeId}/checklist/link-part/switch?item=${encodeURIComponent(itemKey)}&partId=${partId}`
+        );
+      }
+    }
+
+    // Record the explicit item link + check it off on this bike.
+    const progress = await getOrCreateProgress(pb, bikeId, user.id);
     const links: Record<string, string> =
       progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
     links[itemKey] = partId;
-
-    // Linking a part auto-checks its checklist item (the checkbox then renders
-    // checked + disabled until the part is unlinked).
     const checkedItems: string[] = Array.isArray(progress.checked_items)
       ? progress.checked_items
       : [];
     const checked = [...new Set([...checkedItems, itemKey])];
-
     await pb
       .collection('checklist_progress')
       .update(progress.id, { part_links: links, checked_items: checked });
 
-    throw redirect(303, `/bikes/${event.params.id}/checklist`);
+    throw redirect(303, back);
   }
 };

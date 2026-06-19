@@ -27,6 +27,39 @@ export async function getOrCreateProgress(pb: PocketBase, bikeId: string, ownerI
   }
 }
 
+/**
+ * Remove every checklist link (and its auto-check) that points at a given part
+ * on a given bike's progress. Used when a part is switched off this bike to
+ * another, so the old bike's checklist no longer shows it linked.
+ */
+export async function removePartFromBikeLinks(
+  pb: PocketBase,
+  bikeId: string,
+  partId: string
+): Promise<void> {
+  let progress;
+  try {
+    progress = await pb.collection('checklist_progress').getFirstListItem(`bike = '${bikeId}'`);
+  } catch {
+    return; // no progress for that bike
+  }
+  const links: Record<string, string> =
+    progress.part_links && typeof progress.part_links === 'object' ? { ...progress.part_links } : {};
+  const removedKeys = Object.entries(links)
+    .filter(([, id]) => id === partId)
+    .map(([key]) => key);
+  if (removedKeys.length === 0) return;
+
+  for (const key of removedKeys) delete links[key];
+  const checked = (Array.isArray(progress.checked_items) ? progress.checked_items : []).filter(
+    (k: string) => !removedKeys.includes(k)
+  );
+  await pb.collection('checklist_progress').update(progress.id, {
+    part_links: links,
+    checked_items: checked
+  });
+}
+
 const FORKS: ForkAxis[] = ['threaded', 'threadless'];
 const BARS: BarAxis[] = ['flat', 'drop', 'cruiser', 'alt'];
 const BRAKES: BrakeAxis[] = ['canti', 'vbrake', 'cp', 'disc-short', 'disc-long'];
