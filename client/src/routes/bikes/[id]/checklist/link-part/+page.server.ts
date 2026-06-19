@@ -29,16 +29,16 @@ function summarize(part: any, bikeId: string) {
     .map(([, v]) => (Array.isArray(v) ? v.join(', ') : String(v)));
 
   const bikeIds: string[] = Array.isArray(part.bikes) ? part.bikes : [];
-  const otherBikeNames: string[] = (part.expand?.bikes ?? [])
+  const otherBikes: { id: string; name: string }[] = (part.expand?.bikes ?? [])
     .filter((b: any) => b.id !== bikeId)
-    .map((b: any) => b.name);
+    .map((b: any) => ({ id: b.id, name: b.name }));
   const quantity = part.quantity ?? 1;
   const onThisBike = bikeIds.includes(bikeId);
   const available = Math.max(0, quantity - bikeIds.length); // units not yet on a bike
 
   let status: string;
   if (onThisBike) status = 'On this bike ✓';
-  else if (otherBikeNames.length) status = `📍 On: ${otherBikeNames.join(', ')}`;
+  else if (otherBikes.length) status = `📍 On: ${otherBikes.map((b) => b.name).join(', ')}`;
   else status = 'In inventory · not on a bike';
 
   return {
@@ -50,7 +50,7 @@ function summarize(part: any, bikeId: string) {
     quantity,
     available,
     onThisBike,
-    priorBikeName: otherBikeNames.join(', ')
+    otherBikes
   };
 }
 
@@ -154,8 +154,11 @@ export const actions: Actions = {
         bikes.push(bikeId);
         await pb.collection('parts').update(partId, { bikes });
       } else if (confirmed) {
-        // Fully assigned elsewhere — switch one unit from its prior bike.
-        const prior = bikes.find((b) => b !== bikeId);
+        // Fully assigned elsewhere — switch one unit off a chosen prior bike
+        // (`from`), defaulting to the first if none/invalid was supplied.
+        const others = bikes.filter((b) => b !== bikeId);
+        const requested = String(form.get('from') ?? '');
+        const prior = others.includes(requested) ? requested : others[0];
         bikes = bikes.filter((b) => b !== prior);
         bikes.push(bikeId);
         await pb.collection('parts').update(partId, { bikes });

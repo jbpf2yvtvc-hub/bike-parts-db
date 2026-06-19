@@ -78,7 +78,7 @@
             item={data.itemKey}
             partId={p.id}
             partTitle={p.title}
-            priorBikeName={p.priorBikeName}
+            otherBikes={p.otherBikes}
             thisBikeName={data.bike.name}
           />
         {:else}

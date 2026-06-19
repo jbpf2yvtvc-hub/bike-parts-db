@@ -12,7 +12,7 @@
     item,
     partId,
     partTitle,
-    priorBikeName,
+    otherBikes,
     thisBikeName
   }: {
     confirmHref: string;
@@ -20,9 +20,11 @@
     item: string;
     partId: string;
     partTitle: string;
-    priorBikeName: string;
+    otherBikes: { id: string; name: string }[];
     thisBikeName: string;
   } = $props();
+
+  const multi = $derived(otherBikes.length > 1);
 
   const {
     elements: { overlay, content, title: titleEl, description, close, portalled },
@@ -55,14 +57,30 @@
       </h2>
       <p use:melt={$description} class="mt-2 text-ink-muted">
         <strong class="text-ink">{partTitle}</strong> has no free units left — every one is already
-        on a bike ({priorBikeName}). Switching moves it onto <strong class="text-ink">{thisBikeName}</strong>
-        and removes it from {priorBikeName}.
+        on a bike. Switching moves one onto <strong class="text-ink">{thisBikeName}</strong>.
       </p>
 
-      <form method="POST" {action} use:enhance class="mt-6 flex justify-end gap-3">
+      <form method="POST" {action} use:enhance class="mt-4">
         <input type="hidden" name="item" value={item} />
         <input type="hidden" name="partId" value={partId} />
         <input type="hidden" name="confirm" value="1" />
+
+        {#if multi}
+          <fieldset class="mb-4">
+            <legend class="mb-1 font-medium">Take it off which bike?</legend>
+            {#each otherBikes as b, i (b.id)}
+              <label class="flex min-h-[44px] items-center gap-2">
+                <input type="radio" name="from" value={b.id} checked={i === 0} class="h-4 w-4" />
+                <span>{b.name}</span>
+              </label>
+            {/each}
+          </fieldset>
+        {:else}
+          <input type="hidden" name="from" value={otherBikes[0]?.id} />
+          <p class="mb-4 text-sm text-ink-muted">It will be removed from {otherBikes[0]?.name}.</p>
+        {/if}
+
+        <div class="flex justify-end gap-3">
         <button
           use:melt={$close}
           type="button"
@@ -77,6 +95,7 @@
           <ArrowLeftRight size={16} aria-hidden="true" />
           Switch
         </button>
+        </div>
       </form>
     </div>
   </div>

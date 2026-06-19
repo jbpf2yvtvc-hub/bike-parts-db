@@ -33,10 +33,9 @@ export const load: PageServerLoad = async (event) => {
   const partTitle =
     [part.attributes?.brand, part.attributes?.model].filter(Boolean).join(' ') ||
     getLabel(part.type_id);
-  const priorBikeName = (part.expand?.bikes ?? [])
+  const otherBikes: { id: string; name: string }[] = (part.expand?.bikes ?? [])
     .filter((b: any) => b.id !== bikeId)
-    .map((b: any) => b.name)
-    .join(', ');
+    .map((b: any) => ({ id: b.id, name: b.name }));
 
   return {
     bikeId,
@@ -44,6 +43,6 @@ export const load: PageServerLoad = async (event) => {
     item,
     partId,
     partTitle,
-    priorBikeName
+    otherBikes
   };
 };
