@@ -1,9 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
-import { getOrCreateProgress, normalizeConfig } from '$lib/server/checklist';
+import {
+  getOrCreateProgress,
+  normalizeConfig,
+  buildChecklistContext,
+  removePartFromBikeLinks
+} from '$lib/server/checklist';
 import { getLabel } from '$lib/schema-utils';
-import { matchItemForPart } from '$lib/checklist-compatibility';
+import { matchItemsForPart } from '$lib/checklist-compatibility';
 import type { PartRecord } from '$lib/types';
 
 // One resolved link for an item, with where it came from:
@@ -51,11 +56,11 @@ export const load: PageServerLoad = async (event) => {
   const explicitLinks: Record<string, string> =
     progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
 
-  // --- Auto-link parts installed on this bike --------------------------------
-  // Any part whose `bike` is this bike is matched to its checklist item and
-  // shown as linked automatically (no persistence — it always reflects the
-  // current part records). These implied links take precedence over manual
-  // links for the same item, since the part is physically on the bike.
+  // --- Links: explicit overrides + parts installed on this bike --------------
+  // Parts on this bike auto-fill their matching slot(s) — a part can fill more
+  // than one (a brifter is a shifter AND a brake lever). An explicit part_link
+  // for a slot WINS over the auto-fill, which is how you override (e.g. put a
+  // separate shifter in the shifter slot while a brifter stays in the lever).
   const onBike = (await pb
     .collection('parts')
     .getFullList({ filter: `owner = '${user.id}' && bikes.id ?= '${bike.id}'`, expand: 'bikes' })) as any[];
@@ -63,46 +68,37 @@ export const load: PageServerLoad = async (event) => {
   const byId: Record<string, any> = {};
   for (const p of onBike) byId[p.id] = p;
 
-  // The frame for this build (on-bike, else manually linked) decides whether
-  // the seatpost section shows a "collar" or a "binder bolt" item (§9.5).
-  let framePart = onBike.find((p) => p.type_id === 'frame');
-  if (!framePart && explicitLinks['frame::frame']) {
-    try {
-      framePart = (await pb.collection('parts').getOne(explicitLinks['frame::frame'])) as any;
-      if (framePart) byId[framePart.id] = framePart;
-    } catch {
-      /* linked frame missing — ignore */
-    }
-  }
-  const ctx = { frameIntegratedClamp: !!framePart?.attributes?.integrated_seatpost_clamp };
+  // Context derived from the linked frame/fork/calipers (brake mounts, clamp).
+  const ctx = await buildChecklistContext(pb, explicitLinks, onBike);
 
+  // Implied (on-bike) fills, multi-slot, skipping any slot with an explicit link.
   const impliedByKey: Record<string, string> = {};
   for (const p of onBike) {
-    const key = matchItemForPart(p as PartRecord, config, ctx);
-    if (key) impliedByKey[key] = p.id; // last match wins (rare collisions)
+    for (const key of matchItemsForPart(p as PartRecord, config, ctx)) {
+      if (key in explicitLinks) continue; // explicit override wins
+      if (key in impliedByKey) continue; // first on-bike part claims the slot
+      impliedByKey[key] = p.id;
+    }
   }
 
-  // Resolve any manually-linked parts not already loaded (they may not be on
-  // the bike). Skip manual links overridden by an implied (on-bike) link.
-  const manualIds = Object.entries(explicitLinks)
-    .filter(([key, id]) => id && !(key in impliedByKey) && !byId[id])
-    .map(([, id]) => id);
-  if (manualIds.length) {
-    const clause = [...new Set(manualIds)].map((id) => `id = '${id}'`).join(' || ');
+  // Resolve explicitly-linked parts not already loaded (may not be on the bike).
+  const explicitIds = [...new Set(Object.values(explicitLinks).filter((id) => id && !byId[id]))];
+  if (explicitIds.length) {
+    const clause = explicitIds.map((id) => `id = '${id}'`).join(' || ');
     const recs = (await pb
       .collection('parts')
       .getFullList({ filter: `owner = '${user.id}' && (${clause})`, expand: 'bikes' })) as any[];
     for (const r of recs) byId[r.id] = r;
   }
 
-  // Build the effective per-item link map (implied wins).
+  // Build the effective per-item link map: explicit first, then implied fills
+  // the remaining slots.
   const links: Record<string, LinkEntry> = {};
   for (const [key, id] of Object.entries(explicitLinks)) {
-    if (key in impliedByKey || !byId[id]) continue;
-    links[key] = summarizeLink(byId[id], bike.id, 'manual');
+    if (byId[id]) links[key] = summarizeLink(byId[id], bike.id, 'manual');
   }
   for (const [key, id] of Object.entries(impliedByKey)) {
-    if (byId[id]) links[key] = summarizeLink(byId[id], bike.id, 'bike');
+    if (!(key in links) && byId[id]) links[key] = summarizeLink(byId[id], bike.id, 'bike');
   }
 
   // View filter for no-JS (?view=installed|needed); default 'all'.
@@ -136,27 +132,29 @@ export const actions: Actions = {
     return { saved: true };
   },
 
-  unlinkPart: async (event) => {
-    const user = requireUser(event);
+  // Remove a part from this bike entirely (and from every slot it filled here):
+  // drop the bike from the part's `bikes`, and clear any explicit links + checks
+  // pointing at it on this bike.
+  removeFromBike: async (event) => {
+    requireUser(event);
     const pb = event.locals.pb;
+    const bikeId = event.params.id;
     const form = await event.request.formData();
-    const key = String(form.get('key') ?? '');
+    const partId = String(form.get('partId') ?? '');
 
-    const progress = await getOrCreateProgress(pb, event.params.id, user.id);
-    const links: Record<string, string> =
-      progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
-    delete links[key];
+    if (partId) {
+      try {
+        const part = await pb.collection('parts').getOne(partId);
+        const bikes = (Array.isArray(part.bikes) ? (part.bikes as string[]) : []).filter(
+          (b) => b !== bikeId
+        );
+        await pb.collection('parts').update(partId, { bikes });
+      } catch {
+        /* part missing — ignore */
+      }
+      await removePartFromBikeLinks(pb, bikeId, partId);
+    }
 
-    // Unlinking clears the auto-check and re-enables the checkbox.
-    const checkedItems: string[] = Array.isArray(progress.checked_items)
-      ? progress.checked_items
-      : [];
-    const checked = checkedItems.filter((k) => k !== key);
-
-    await pb
-      .collection('checklist_progress')
-      .update(progress.id, { part_links: links, checked_items: checked });
-
-    throw redirect(303, `/bikes/${event.params.id}/checklist`);
+    throw redirect(303, `/bikes/${bikeId}/checklist`);
   }
 };

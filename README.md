@@ -25,10 +25,12 @@ See [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md) for the full spec
 - **Quantity & multi-bike.** A part has a quantity and can be installed on up to
   that many bikes (one unit each); the add/edit form caps the selection.
 - **Bikes** with their own records; parts reference the bikes they're on.
-- **Build Checklist** per bike: a 6-axis configurator (steerer, handlebar,
-  brake, chainrings, rear speeds, chain tension) with friction/indexed shifting,
-  cross-axis visibility, freehub × speed compatibility, collapsible sections, an
-  All / Installed / Needed view filter, and progress.
+- **Build Checklist** per bike: a configurator (steerer, handlebar, chainrings,
+  rear speeds, chain tension) with friction/indexed shifting, cross-axis
+  visibility, freehub × speed compatibility, collapsible sections, an
+  All / Installed / Needed view filter, and progress. Brake type is driven by
+  the linked fork (front) and frame (rear), with front/rear calipers and
+  left/right levers; drop-bar brifters fill both a shifter and a lever slot.
   - **Part linking** with compatibility pre-filtering; parts installed on the
     bike **auto-link** and auto-check their item.
 - **Search** across parts (keyword + metadata), **CSV export** (parts + bikes).

@@ -134,7 +134,7 @@
   >
     <fieldset>
       <legend class="sr-only">Build configuration</legend>
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         <label class="block text-xs">
           <span class="text-ink-muted">Steerer / stem</span>
           <select name="fork" bind:value={config.fork} onchange={onConfigChange} class="mt-1 w-full min-h-[44px] rounded border border-border bg-surface-2 px-2">
@@ -149,16 +149,6 @@
             <option value="drop">drop</option>
             <option value="cruiser">cruiser/multi-position</option>
             <option value="alt">alt bars</option>
-          </select>
-        </label>
-        <label class="block text-xs">
-          <span class="text-ink-muted">Brake type</span>
-          <select name="brake" bind:value={config.brake} onchange={onConfigChange} class="mt-1 w-full min-h-[44px] rounded border border-border bg-surface-2 px-2">
-            <option value="canti">cantilever</option>
-            <option value="vbrake">V-brake</option>
-            <option value="cp">center-pull</option>
-            <option value="disc-short">disc (short pull)</option>
-            <option value="disc-long">disc (long pull)</option>
           </select>
         </label>
         <label class="block text-xs">
@@ -355,23 +345,19 @@
                     <p class="mt-1 flex items-center gap-1 text-ink-muted">
                       <MapPin size={14} aria-hidden="true" /> {linkStatus(linked)}
                     </p>
-                    {#if linked.source === 'bike'}
-                      <!-- Auto-linked from the bike assignment: can't be unlinked
-                           here; change the part's bike to remove it. -->
-                      <div class="mt-2 flex flex-wrap gap-3">
-                        <a href={`/parts/${linked.id}`} class="text-accent underline">View part</a>
-                        <a href={`/parts/${linked.id}/edit`} class="text-ink-muted underline">Edit / reassign bike</a>
-                      </div>
-                    {:else}
-                      <div class="mt-2 flex flex-wrap gap-3">
-                        <a href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(key)}`} class="text-accent underline">Change</a>
-                        <!-- formaction overrides the enclosing form's action, so no
-                             nested <form> is needed (invalid HTML). -->
-                        <button type="submit" formaction="?/unlinkPart" name="key" value={key} class="text-ink-muted underline">
-                          Unlink
-                        </button>
-                      </div>
-                    {/if}
+                    <div class="mt-2 flex flex-wrap gap-3">
+                      <!-- "Change" picks a different part for THIS slot (an
+                           override) — e.g. a separate shifter while a brifter
+                           stays in the lever slot. -->
+                      <a href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(key)}`} class="text-accent underline">Change</a>
+                      <a href={`/parts/${linked.id}`} class="text-ink-muted underline">View part</a>
+                      <!-- formaction overrides the enclosing form's action, so no
+                           nested <form> is needed (invalid HTML). Removes the part
+                           from this bike (and all its slots here). -->
+                      <button type="submit" formaction="?/removeFromBike" name="partId" value={linked.id} class="text-ink-muted underline">
+                        Remove from bike
+                      </button>
+                    </div>
                   {:else}
                     <a
                       href={`/bikes/${bikeId}/checklist/link-part?item=${encodeURIComponent(key)}`}

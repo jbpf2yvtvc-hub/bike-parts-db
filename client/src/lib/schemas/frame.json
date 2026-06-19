@@ -27,6 +27,21 @@
       "options": ["vertical", "horizontal", "track", "sliding"]
     },
     {
+      "id": "brake_mount",
+      "label": "Brake mount (rear)",
+      "type": "select",
+      "searchable": true,
+      "hint": "Drives the rear brake, lever, and wheel options on the build checklist",
+      "options": [
+        "canti/V-brake bosses",
+        "caliper / center-pull",
+        "disc IS",
+        "disc PM",
+        "disc flat mount",
+        "none"
+      ]
+    },
+    {
       "id": "integrated_seatpost_clamp",
       "label": "Integrated seatpost clamp",
       "type": "boolean",

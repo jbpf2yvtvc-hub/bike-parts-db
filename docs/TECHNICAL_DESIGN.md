@@ -209,7 +209,7 @@ Single-speed / tension: `cog`, `chain_tensioner`, `eccentric_bb`.
 Key compatibility-bearing fields (must match the filter table in §9.5 exactly):
 
 - `frame.integrated_seatpost_clamp`: bool — when true the checklist asks for a binder bolt instead of a separate seatpost collar (§9.5)
-- `fork.brake_mount`: `boss (canti/V-brake)` | `disc IS` | `disc PM` | `none`
+- `fork.brake_mount` (front) and `frame.brake_mount` (rear): `canti/V-brake bosses` | `caliper / center-pull` | `disc IS` | `disc PM` | `disc flat mount` | `none` — **these drive the brake type** for the front/rear of the build (§9.5); brake type is no longer a configurator axis
 - `headset.standard`: `threaded` | `threadless EC` | `threadless ZS` | `threadless IS` | `threadless taper`
 - `stem.style`: `quill (threaded)` | `threadless clamp-on`
 - `handlebar.style`: `flat` | `drop` | `bullhorn` | `riser` | `moustache` | `cruiser/multi-position` | `alt bars`
@@ -373,7 +373,6 @@ Each item carries a **stable `id`** (kebab-case, unique within its section). The
 |---|---|---|---|---|
 | `fork` | Steerer / stem | `threaded`, `threadless` | `threaded` | always |
 | `bar` | Handlebar type | `flat`, `drop`, `cruiser`, `alt` | `flat` | always |
-| `brake` | Brake type | `canti`, `vbrake`, `cp`, `disc-short`, `disc-long` | `canti` | always |
 | `chainrings` | Chainrings at crank | `1`, `2`, `3` | `2` | always |
 | `rear_speeds` | Speeds at rear | `1`, `6`, `7`, `8`, `9`, `10`, `11`, `12` | `10` | always |
 | `tension` | Chain tension method | `horizontal`, `tensioner`, `ebb` | `horizontal` | only when `rear_speeds = 1` |
@@ -437,13 +436,11 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 | `bars::handlebar-drop` | `bar:drop` | `type_id='handlebar' && attributes.style~'drop'` | — |
 | `bars::handlebar-cruiser` | `bar:cruiser` | `type_id='handlebar' && attributes.style~'cruiser'` | — |
 | `bars::handlebar-alt` | `bar:alt` | `type_id='handlebar' && attributes.style~'alt'` | — |
-| `brakes::caliper-canti` | `brake:canti` | `type_id='brake_caliper' && attributes.style~'cantilever'` | — |
-| `brakes::caliper-vbrake` | `brake:vbrake` | `type_id='brake_caliper' && attributes.style~'v-brake'` | — |
-| `brakes::caliper-cp` | `brake:cp` | `type_id='brake_caliper' && attributes.style~'center-pull'` | — |
-| `brakes::caliper-disc` | `brake:disc-*` | `type_id='brake_caliper' && attributes.style~'disc'` | — |
-| `brakes::lever` | `bar:flat, brake:canti\|cp` | `type_id='brake_lever' && attributes.pull~'short' && attributes.mount~'flat'` | — |
-| `brakes::lever` | `bar:flat, brake:vbrake` | `type_id='brake_lever' && attributes.pull~'long' && attributes.mount~'flat'` | — |
-| `brakes::lever` | `bar:drop` | `type_id='brake_lever' && attributes.mount~'drop'` | — |
+| `brakes::caliper-front` | fork mount known | `type_id='brake_caliper' && (position front/either) && <styles for fork mount>` | — |
+| `brakes::caliper-rear` | frame mount known | `type_id='brake_caliper' && (position rear/either) && <styles for frame mount>` | — |
+| `brakes::lever-left` | `bar:drop` | `(brake_lever mount~'drop' && hand left/pair) \|\| (shifter style~'brifter' && hand='left')` | — |
+| `brakes::lever-left` | `bar:flat\|cruiser\|alt` | `brake_lever mount~'flat' && hand left/pair` | — |
+| `brakes::lever-right` | — | same as left with `hand='right'` | — |
 | `wheels::front-wheel` | `brake:disc-*` | `type_id='wheel' && attributes.position='front' && attributes.brake_type~'disc'` | — |
 | `wheels::front-wheel` | `brake:canti\|vbrake\|cp` | `type_id='wheel' && attributes.position='front' && attributes.brake_type~'rim'` | — |
 | `wheels::rear-wheel` | `rear_speeds:1` | `type_id='wheel' && attributes.position='rear' && attributes.freehub_standard~'track\|flip-flop\|single-speed'` | — |
@@ -462,6 +459,12 @@ Opening a line item's part picker pre-filters the user's inventory by the curren
 **Frame-driven seatpost item.** The linked frame's `integrated_seatpost_clamp` attribute decides which of those shows: when **false** the list shows **Seatpost clamp (collar)** (`stem::seatpost-clamp`, links to a `seatpost_clamp` part); when **true** it instead shows **Binder bolt (standard or QR)** (`stem::binder-bolt`, a check-off item with no picker, since a binder bolt isn't tracked as inventory). This is threaded into item visibility via a `ChecklistContext` derived from the build's frame.
 
 **Stem converter (threaded steerers).** When `fork = threaded`, the quill-stem item shows a **"Use a stem converter"** checkbox (`config.stem_converter`). With it on, the quill picker also offers **threadless** stems (a quill→threadless adapter). Linking an actual **quill** stem turns the converter back off (`linkPart`). The flag is forced off whenever the steerer isn't threaded.
+
+**Brake type comes from the frame & fork (not the configurator).** There is no `brake` axis. The **fork's** `brake_mount` drives the **front** brake/lever/wheel options; the **frame's** `brake_mount` drives the **rear**. Until a fork/frame is linked, the front/rear brake and wheel pickers show **any** part; once linked they constrain by type (rim-boss / rim-caliper / disc, via `brake-compatibility.ts`). It's **bidirectional**: if a brake is linked first, the fork/frame picker is constrained to matching mounts. All of this is carried in a `ChecklistContext` (`buildChecklistContext`) derived from the linked fork, frame, and front/rear calipers — `getCompatibilityFilter(itemKey, cfg, ctx)`.
+
+**Calipers front/rear, levers left/right.** Calipers are two slots (`brakes::caliper-front`/`-rear`, by `position`); levers are two slots (`brakes::lever-left`/`-right`) decoupled from which brake they pull (lever side ≠ brake end varies by country). A slot hides when its mount is `none`.
+
+**Brifters fill two slots.** A drop-bar **brifter** (a `shifter` with style `drop-bar brifter`) is both a shifter and a brake lever. `matchItemsForPart` returns **all** slots a part fills, so a left brifter on the bike auto-fills `drivetrain::left-shifter` **and** `brakes::lever-left`. Override: an **explicit** `part_link` wins over an auto-fill for a slot, so you can drop a separate shifter into the shifter slot while the brifter stays in the lever slot. **Precedence is explicit-then-implied** (a change from the earlier "implied wins"). "Change" re-picks a slot (creating the override); "Remove from bike" takes the part off the bike (and out of every slot it filled here).
 
 **Picker behaviour:**
 - Linked part shows type + key attributes + current bike: "On this bike ✓", "📍 On: <bike name>", or "In inventory · not on a bike".
@@ -599,6 +602,8 @@ These changes were made after the initial v1.0 build and are live. Where they di
 - **Seatpost & saddle moved under Cockpit.** The seatpost/saddle/clamp items now live in the **Cockpit** (`stem`) section; the standalone "Seatpost & saddle" section was removed. Item keys changed `seatpost::*` → `stem::*` (compatibility map + filters updated).
 - **Stem converter (threaded steerers).** A `config.stem_converter` flag, surfaced as a checkbox on the quill-stem item when `fork = threaded`. When on, the quill picker also offers threadless stems; linking an actual quill stem turns it back off; it's forced off when the steerer isn't threaded.
 - **Consistent button affordance.** Global CSS gives every `<button>` (and any link with `class="btn"`) a pointer cursor, a smooth transition, and the **same** visual change (`brightness`) on hover **and** keyboard focus (`focus-visible`); disabled buttons show `not-allowed`. Button-styled links across the app opt in via the `btn` class.
+- **Decimal number fields.** Number inputs set `step="1"` for `inputmode="numeric"` fields and `step="any"` otherwise, so decimal fields (headset stack height, BCD, diameters, prices) accept fractional values.
+- **Brakes overhaul.** Brake type moved off the configurator onto the **fork** (`brake_mount`, front) and **frame** (`brake_mount`, rear), with bidirectional fork↔caliper / frame↔caliper compatibility derived in `buildChecklistContext`. Calipers split into front/rear; brake levers split into left/right. **Brifters** (`drop-bar brifter` shifters) fill both a shifter slot and a brake-lever slot via `matchItemsForPart` (now returns all matching slots); an explicit link overrides an auto-fill for a slot (precedence is now **explicit-then-implied**). New `removeFromBike` action; new `brake-compatibility.ts` helper. (Item keys `brakes::caliper-*`/`lever-*` changed — resets prior brake progress.)
 - **Configurator persistence fix.** The config save now uses an absolute URL (`/bikes/<id>/checklist/config`); the previous relative URL resolved to the wrong path and silently dropped config changes.
 - **Linking assigns to the bike + switch-on-conflict.** *Link* in the picker now puts the part on the current bike (consuming a unit). When a part is fully assigned to other bikes, the picker shows **Switch to this bike**, which confirms via a dialog (no-JS: a confirm page) and then moves one unit from a prior bike to this one — and if the part is on several other bikes, the dialog lets you choose which one it comes off. The **[+ Add a new part]** / **[Show all parts anyway]** actions moved to an always-visible toolbar, so adding a part is possible even when every listed part is already in use.
 

@@ -6,12 +6,19 @@
     { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
     {
       "id": "brake_mount",
-      "label": "Brake mount",
+      "label": "Brake mount (front)",
       "type": "select",
       "required": true,
       "searchable": true,
-      "hint": "Determines which brakes/wheels are compatible",
-      "options": ["boss (canti/V-brake)", "disc IS", "disc PM", "none"]
+      "hint": "Drives the front brake, lever, and wheel options on the build checklist",
+      "options": [
+        "canti/V-brake bosses",
+        "caliper / center-pull",
+        "disc IS",
+        "disc PM",
+        "disc flat mount",
+        "none"
+      ]
     },
     {
       "id": "steerer",

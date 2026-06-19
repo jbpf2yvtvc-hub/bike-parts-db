@@ -14,7 +14,6 @@
 
 export type ForkAxis = 'threaded' | 'threadless';
 export type BarAxis = 'flat' | 'drop' | 'cruiser' | 'alt';
-export type BrakeAxis = 'canti' | 'vbrake' | 'cp' | 'disc-short' | 'disc-long';
 export type Chainrings = '1' | '2' | '3';
 export type RearSpeeds = '1' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
 export type Tension = 'horizontal' | 'tensioner' | 'ebb';
@@ -23,7 +22,6 @@ export type ShiftingMode = 'indexed' | 'friction';
 export interface ChecklistConfig {
   fork: ForkAxis;
   bar: BarAxis;
-  brake: BrakeAxis;
   chainrings: Chainrings;
   rear_speeds: RearSpeeds;
   tension: Tension;
@@ -37,17 +35,26 @@ export interface ChecklistConfig {
 }
 
 /**
- * Extra, non-configurator context that affects item visibility — currently
- * whether the linked frame has an integrated seatpost clamp.
+ * Extra, non-configurator context derived from the build's linked parts. Brake
+ * type is no longer a configurator axis — it comes from the linked fork (front)
+ * and frame (rear). These also feed bidirectional fork↔caliper / frame↔caliper
+ * compatibility (§9.5 update).
  */
 export interface ChecklistContext {
   frameIntegratedClamp?: boolean;
+  /** `brake_mount` of the linked fork → drives front brake/lever/wheel. */
+  forkBrakeMount?: string;
+  /** `brake_mount` of the linked frame → drives rear brake/lever/wheel. */
+  frameBrakeMount?: string;
+  /** `style` of the linked front caliper → constrains the fork picker. */
+  frontCaliperStyle?: string;
+  /** `style` of the linked rear caliper → constrains the frame picker. */
+  rearCaliperStyle?: string;
 }
 
 export const DEFAULT_CONFIG: ChecklistConfig = {
   fork: 'threaded',
   bar: 'flat',
-  brake: 'canti',
   chainrings: '2',
   rear_speeds: '10',
   tension: 'horizontal',
@@ -76,21 +83,21 @@ export interface ChecklistSection {
 
 const isDerailleur = (cfg: ChecklistConfig) => cfg.rear_speeds !== '1';
 const hasFront = (cfg: ChecklistConfig) => cfg.chainrings === '2' || cfg.chainrings === '3';
-const isDisc = (cfg: ChecklistConfig) => cfg.brake === 'disc-short' || cfg.brake === 'disc-long';
 
 export const SECTIONS: ChecklistSection[] = [
   {
     id: 'frame',
     title: 'Frame & front end',
     items: [
-      { id: 'frame', t: 'Frame' },
+      {
+        id: 'frame',
+        t: 'Frame',
+        n: 'The frame’s rear brake mount drives the rear brake/lever/wheel options. If a rear brake is already linked, only matching frames are shown.'
+      },
       {
         id: 'fork',
         t: 'Fork',
-        n: (cfg) =>
-          isDisc(cfg)
-            ? 'Disc fork — check disc mount (IS or PM) matches your caliper.'
-            : 'Rim-brake fork — check for canti/V-brake bosses.'
+        n: 'The fork’s front brake mount drives the front brake/lever/wheel options. If a front brake is already linked, only matching forks are shown.'
       },
       {
         id: 'headset-threaded',
@@ -230,13 +237,28 @@ export const SECTIONS: ChecklistSection[] = [
     id: 'brakes',
     title: 'Brakes',
     items: [
-      { id: 'caliper-canti', t: 'Brake — cantilever', visible: (cfg) => cfg.brake === 'canti' },
-      { id: 'caliper-vbrake', t: 'Brake — V-brake', visible: (cfg) => cfg.brake === 'vbrake' },
-      { id: 'caliper-cp', t: 'Brake — center-pull', visible: (cfg) => cfg.brake === 'cp' },
-      { id: 'caliper-disc', t: 'Brake — disc', visible: isDisc },
+      // Calipers are front/rear (driven by the fork/frame brake mount). Levers
+      // are left/right (decoupled from which brake they pull). Hidden when the
+      // corresponding mount is 'none' (brakeless).
       {
-        id: 'lever',
-        t: (cfg) => (cfg.bar === 'drop' ? 'Brake levers — drop bar' : 'Brake levers — flat bar')
+        id: 'caliper-front',
+        t: 'Front brake',
+        visible: (_cfg, ctx) => ctx.forkBrakeMount !== 'none'
+      },
+      {
+        id: 'caliper-rear',
+        t: 'Rear brake',
+        visible: (_cfg, ctx) => ctx.frameBrakeMount !== 'none'
+      },
+      {
+        id: 'lever-left',
+        t: (cfg) => (cfg.bar === 'drop' ? 'Left lever / brifter' : 'Left brake lever'),
+        visible: (_cfg, ctx) => !(ctx.forkBrakeMount === 'none' && ctx.frameBrakeMount === 'none')
+      },
+      {
+        id: 'lever-right',
+        t: (cfg) => (cfg.bar === 'drop' ? 'Right lever / brifter' : 'Right brake lever'),
+        visible: (_cfg, ctx) => !(ctx.forkBrakeMount === 'none' && ctx.frameBrakeMount === 'none')
       }
     ]
   },
@@ -247,8 +269,7 @@ export const SECTIONS: ChecklistSection[] = [
       {
         id: 'front-wheel',
         t: 'Front wheel',
-        n: (cfg) =>
-          isDisc(cfg) ? 'Disc front hub required.' : 'Rim-brake front wheel required.'
+        n: 'Brake type follows the fork; link a fork to narrow to rim- or disc-brake wheels.'
       },
       {
         id: 'rear-wheel',

@@ -4,7 +4,8 @@ import { requireUser } from '$lib/server/auth';
 import {
   getOrCreateProgress,
   normalizeConfig,
-  removePartFromBikeLinks
+  removePartFromBikeLinks,
+  buildChecklistContext
 } from '$lib/server/checklist';
 import { findItem, getTitle } from '$lib/checklist-data';
 import { getLabel } from '$lib/schema-utils';
@@ -75,8 +76,15 @@ export const load: PageServerLoad = async (event) => {
   const partLinks: Record<string, string> =
     progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
 
+  // Context (brake mounts from the linked fork/frame, etc.) drives the brake,
+  // lever, wheel, fork and frame filters.
+  const onBike = (await pb
+    .collection('parts')
+    .getFullList({ filter: `owner = '${user.id}' && bikes.id ?= '${bike.id}'`, expand: 'bikes' })) as any[];
+  const checklistCtx = await buildChecklistContext(pb, partLinks, onBike);
+
   const typeId = getTypeIdForItem(itemKey);
-  const compatFilter = getCompatibilityFilter(itemKey, config);
+  const compatFilter = getCompatibilityFilter(itemKey, config, checklistCtx);
 
   // "Show all parts anyway" drops the compatibility filter for this session,
   // falling back to the item's type only (§9.5).

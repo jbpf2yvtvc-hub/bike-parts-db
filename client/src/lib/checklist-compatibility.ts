@@ -17,7 +17,17 @@
  */
 import { visibleItemKeys, type ChecklistConfig, type ChecklistContext } from './checklist-data';
 import { freehubCompatible } from './freehub-compatibility';
+import {
+  caliperFilterForMount,
+  mountFilterForCaliperStyle,
+  wheelBrakeTypeFilterForMount
+} from './brake-compatibility';
 import type { PartRecord } from './types';
+
+/** Join non-empty filter fragments with &&. */
+function and(...parts: (string | null | undefined)[]): string {
+  return parts.filter(Boolean).join(' && ');
+}
 
 /** type_id that each item links to (drives the "Add a new part" link). */
 const ITEM_TYPE: Record<string, string> = {
@@ -42,11 +52,10 @@ const ITEM_TYPE: Record<string, string> = {
   'drivetrain::chain': 'chain',
   'drivetrain::cog': 'cog',
   'drivetrain::chain-tensioner': 'chain_tensioner',
-  'brakes::caliper-canti': 'brake_caliper',
-  'brakes::caliper-vbrake': 'brake_caliper',
-  'brakes::caliper-cp': 'brake_caliper',
-  'brakes::caliper-disc': 'brake_caliper',
-  'brakes::lever': 'brake_lever',
+  'brakes::caliper-front': 'brake_caliper',
+  'brakes::caliper-rear': 'brake_caliper',
+  'brakes::lever-left': 'brake_lever',
+  'brakes::lever-right': 'brake_lever',
   'wheels::front-wheel': 'wheel',
   'wheels::rear-wheel': 'wheel',
   // Seatpost & saddle now live under the Cockpit (stem) section.
@@ -55,26 +64,25 @@ const ITEM_TYPE: Record<string, string> = {
   'stem::saddle': 'saddle'
 };
 
-const isDisc = (cfg: ChecklistConfig) => cfg.brake === 'disc-short' || cfg.brake === 'disc-long';
-
 export function getTypeIdForItem(itemKey: string): string | null {
   return ITEM_TYPE[itemKey] ?? null;
 }
 
 export function getCompatibilityFilter(
   itemKey: string,
-  cfg: ChecklistConfig
+  cfg: ChecklistConfig,
+  ctx: ChecklistContext = {}
 ): string | null {
   const rs = cfg.rear_speeds;
 
   switch (itemKey) {
     case 'frame::frame':
-      return "type_id='frame'";
+      // If a rear brake is already linked, only show matching frames.
+      return and("type_id='frame'", mountFilterForCaliperStyle(ctx.rearCaliperStyle));
 
     case 'frame::fork':
-      return isDisc(cfg)
-        ? "type_id='fork' && attributes.brake_mount~'disc'"
-        : "type_id='fork' && attributes.brake_mount~'boss'";
+      // If a front brake is already linked, only show matching forks.
+      return and("type_id='fork'", mountFilterForCaliperStyle(ctx.frontCaliperStyle));
 
     case 'frame::headset-threaded':
       return "type_id='headset' && attributes.standard~'threaded'";
@@ -134,33 +142,51 @@ export function getCompatibilityFilter(
     case 'drivetrain::right-shifter':
       return "type_id='shifter' && attributes.hand='right'";
 
-    case 'brakes::caliper-canti':
-      return "type_id='brake_caliper' && attributes.style~'cantilever'";
-    case 'brakes::caliper-vbrake':
-      return "type_id='brake_caliper' && attributes.style~'v-brake'";
-    case 'brakes::caliper-cp':
-      return "type_id='brake_caliper' && attributes.style~'center-pull'";
-    case 'brakes::caliper-disc':
-      return "type_id='brake_caliper' && attributes.style~'disc'";
+    // Calipers: front follows the fork's mount, rear follows the frame's mount.
+    case 'brakes::caliper-front':
+      return and(
+        "type_id='brake_caliper'",
+        "(attributes.position='front' || attributes.position='either')",
+        caliperFilterForMount(ctx.forkBrakeMount)
+      );
+    case 'brakes::caliper-rear':
+      return and(
+        "type_id='brake_caliper'",
+        "(attributes.position='rear' || attributes.position='either')",
+        caliperFilterForMount(ctx.frameBrakeMount)
+      );
 
-    case 'brakes::lever': {
-      if (cfg.bar === 'drop') return "type_id='brake_lever' && attributes.mount~'drop'";
-      // flat bar: short pull for canti/center-pull/short-pull disc, long for V-brake/long-pull disc
-      const longPull = cfg.brake === 'vbrake' || cfg.brake === 'disc-long';
-      return `type_id='brake_lever' && attributes.pull~'${longPull ? 'long' : 'short'}' && attributes.mount~'flat'`;
+    // Levers are left/right, filtered by handlebar mount. On drop bars they also
+    // accept a brifter of the matching hand (which doubles as a shifter).
+    case 'brakes::lever-left':
+    case 'brakes::lever-right': {
+      const hand = itemKey === 'brakes::lever-left' ? 'left' : 'right';
+      if (cfg.bar === 'drop') {
+        return `(type_id='brake_lever' && attributes.mount~'drop' && (attributes.hand='${hand}' || attributes.hand='pair')) || (type_id='shifter' && attributes.style~'brifter' && attributes.hand='${hand}')`;
+      }
+      return `type_id='brake_lever' && attributes.mount~'flat' && (attributes.hand='${hand}' || attributes.hand='pair')`;
     }
 
     case 'wheels::front-wheel':
-      return isDisc(cfg)
-        ? "type_id='wheel' && attributes.position='front' && attributes.brake_type~'disc'"
-        : "type_id='wheel' && attributes.position='front' && attributes.brake_type~'rim'";
+      return and(
+        "type_id='wheel' && attributes.position='front'",
+        wheelBrakeTypeFilterForMount(ctx.forkBrakeMount)
+      );
 
     case 'wheels::rear-wheel':
       if (rs === '1') {
         // single-speed / track / flip-flop hubs (ORed since PB ~ is contains, not alternation)
-        return "type_id='wheel' && attributes.position='rear' && (attributes.freehub_standard~'Single-speed' || attributes.freehub_standard~'Track' || attributes.freehub_standard~'Flip-flop')";
+        return and(
+          "type_id='wheel' && attributes.position='rear'",
+          "(attributes.freehub_standard~'Single-speed' || attributes.freehub_standard~'Track' || attributes.freehub_standard~'Flip-flop')",
+          wheelBrakeTypeFilterForMount(ctx.frameBrakeMount)
+        );
       }
-      return "type_id='wheel' && attributes.position='rear'"; // + freehub post-fetch (grouped)
+      // + freehub post-fetch (grouped)
+      return and(
+        "type_id='wheel' && attributes.position='rear'",
+        wheelBrakeTypeFilterForMount(ctx.frameBrakeMount)
+      );
 
     case 'stem::seatpost':
       return "type_id='seatpost'";
@@ -314,19 +340,20 @@ function evalFilter(filter: string, part: PartRecord): boolean {
 }
 
 /**
- * Find the checklist item a part belongs to under the current config, by
- * testing it against each visible item's compatibility filter. Returns the
- * item key (e.g. `wheels::rear-wheel`) or null if the part fits no slot.
- * Used to auto-link parts that are installed on the bike.
+ * Find ALL checklist items a part can fill under the current config, by testing
+ * it against each visible item's compatibility filter. A part can fill several
+ * slots — e.g. a drop-bar brifter fills both its shifter slot and a brake-lever
+ * slot. Used to auto-link parts that are installed on the bike.
  */
-export function matchItemForPart(
+export function matchItemsForPart(
   part: PartRecord,
   cfg: ChecklistConfig,
   ctx: ChecklistContext = {}
-): string | null {
+): string[] {
+  const keys: string[] = [];
   for (const key of visibleItemKeys(cfg, ctx)) {
-    const filter = getCompatibilityFilter(key, cfg);
-    if (filter && evalFilter(filter, part)) return key;
+    const filter = getCompatibilityFilter(key, cfg, ctx);
+    if (filter && evalFilter(filter, part)) keys.push(key);
   }
-  return null;
+  return keys;
 }
