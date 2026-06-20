@@ -12,6 +12,7 @@
       disposition: part.disposition,
       quantity: part.quantity ?? 1,
       bikes: part.bikes ?? [],
+      bike_qty: part.bike_qty ?? {},
       acquisition_date: part.acquisition_date ?? '',
       acquisition_price: part.acquisition_price ?? '',
       asking_price: part.asking_price ?? ''
@@ -31,6 +32,7 @@
 <PartForm
   schema={data.schema}
   bikes={data.bikes}
+  assocOptions={data.assocOptions}
   {attributes}
   {meta}
   errors={form?.errors ?? {}}

@@ -126,6 +126,17 @@ export const SECTIONS: ChecklistSection[] = [
         t: 'Stem — threadless',
         visible: (cfg) => cfg.fork === 'threadless'
       },
+      // Handlebar lives under Cockpit (no separate section). Stem/handlebar
+      // clamp diameters are NOT cross-checked — shims & adapters make most
+      // combinations workable, so the picker only matches on bar style.
+      { id: 'handlebar-flat', t: 'Handlebar — flat', visible: (cfg) => cfg.bar === 'flat' },
+      { id: 'handlebar-drop', t: 'Handlebar — drop', visible: (cfg) => cfg.bar === 'drop' },
+      {
+        id: 'handlebar-cruiser',
+        t: 'Handlebar — cruiser/multi-position',
+        visible: (cfg) => cfg.bar === 'cruiser'
+      },
+      { id: 'handlebar-alt', t: 'Handlebar — alt bars', visible: (cfg) => cfg.bar === 'alt' },
       // Seatpost & saddle now live under Cockpit (no separate section).
       { id: 'seatpost', t: 'Seatpost' },
       {
@@ -142,20 +153,6 @@ export const SECTIONS: ChecklistSection[] = [
         visible: (_cfg, ctx) => !!ctx.frameIntegratedClamp
       },
       { id: 'saddle', t: 'Saddle' }
-    ]
-  },
-  {
-    id: 'bars',
-    title: 'Handlebar',
-    items: [
-      { id: 'handlebar-flat', t: 'Handlebar — flat', visible: (cfg) => cfg.bar === 'flat' },
-      { id: 'handlebar-drop', t: 'Handlebar — drop', visible: (cfg) => cfg.bar === 'drop' },
-      {
-        id: 'handlebar-cruiser',
-        t: 'Handlebar — cruiser/multi-position',
-        visible: (cfg) => cfg.bar === 'cruiser'
-      },
-      { id: 'handlebar-alt', t: 'Handlebar — alt bars', visible: (cfg) => cfg.bar === 'alt' }
     ]
   },
   {
@@ -278,6 +275,60 @@ export const SECTIONS: ChecklistSection[] = [
           cfg.rear_speeds === '1'
             ? 'Single-speed / track / flip-flop rear hub.'
             : 'Incompatible-freehub wheels you own are shown in a separate group, not hidden.'
+      },
+      // Tires live with the wheels — front/rear, always part of a build.
+      { id: 'front-tire', t: 'Front tire' },
+      { id: 'rear-tire', t: 'Rear tire' }
+    ]
+  },
+  {
+    // Cable inners + housing are consumables (no part picker). Front/rear are
+    // shown only when the relevant brake/shifter is present. Finer detail
+    // (cable ends, specific housing) belongs in the build Notes, not inventory.
+    id: 'cables',
+    title: 'Cables & housing',
+    items: [
+      {
+        id: 'brake-inner-front',
+        t: 'Brake cable inner — front',
+        n: 'Skip if the front brake is hydraulic (it uses a hose, not a cable).',
+        visible: (_cfg, ctx) => ctx.forkBrakeMount !== 'none'
+      },
+      {
+        id: 'brake-housing-front',
+        t: 'Brake cable housing — front',
+        visible: (_cfg, ctx) => ctx.forkBrakeMount !== 'none'
+      },
+      {
+        id: 'brake-inner-rear',
+        t: 'Brake cable inner — rear',
+        n: 'Skip if the rear brake is hydraulic (it uses a hose, not a cable).',
+        visible: (_cfg, ctx) => ctx.frameBrakeMount !== 'none'
+      },
+      {
+        id: 'brake-housing-rear',
+        t: 'Brake cable housing — rear',
+        visible: (_cfg, ctx) => ctx.frameBrakeMount !== 'none'
+      },
+      {
+        id: 'shift-inner-front',
+        t: 'Shift cable inner — front',
+        visible: hasFront
+      },
+      {
+        id: 'shift-housing-front',
+        t: 'Shift cable housing — front',
+        visible: hasFront
+      },
+      {
+        id: 'shift-inner-rear',
+        t: 'Shift cable inner — rear',
+        visible: isDerailleur
+      },
+      {
+        id: 'shift-housing-rear',
+        t: 'Shift cable housing — rear',
+        visible: isDerailleur
       }
     ]
   }

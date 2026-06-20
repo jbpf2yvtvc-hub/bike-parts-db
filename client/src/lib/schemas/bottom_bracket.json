@@ -18,7 +18,7 @@
       "searchable": true,
       "options": ["square taper", "Octalink", "ISIS", "Hollowtech II / 24mm", "GXP", "DUB", "30mm"]
     },
-    { "id": "shell_width_mm", "label": "Shell width (mm)", "type": "number", "inputmode": "numeric" },
+    { "id": "spindle_length_mm", "label": "Spindle length (mm)", "type": "number", "inputmode": "numeric", "searchable": true, "hint": "Shell width is already captured by the shell standard; spindle length distinguishes otherwise-identical bottom brackets" },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

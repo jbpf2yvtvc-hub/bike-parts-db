@@ -15,8 +15,10 @@ export interface PartRecord {
   type_id: string;
   attributes: Record<string, any>;
   quantity?: number;
-  // Bikes this part is installed on (multi-relation; at most `quantity` of them).
+  // Distinct bikes this part is installed on (multi-relation).
   bikes?: string[];
+  // Units of this part installed per bike: { [bikeId]: count }. Sum <= quantity.
+  bike_qty?: Record<string, number>;
   disposition: Disposition;
   acquisition_date?: string;
   acquisition_price?: number;

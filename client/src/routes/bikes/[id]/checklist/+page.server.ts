@@ -8,7 +8,8 @@ import {
   removePartFromBikeLinks
 } from '$lib/server/checklist';
 import { getLabel } from '$lib/schema-utils';
-import { matchItemsForPart } from '$lib/checklist-compatibility';
+import { matchItemsForPart, exclusiveGroupOf } from '$lib/checklist-compatibility';
+import { unitsOnBike } from '$lib/server/parts';
 import type { PartRecord } from '$lib/types';
 
 // One resolved link for an item, with where it came from:
@@ -71,13 +72,33 @@ export const load: PageServerLoad = async (event) => {
   // Context derived from the linked frame/fork/calipers (brake mounts, clamp).
   const ctx = await buildChecklistContext(pb, explicitLinks, onBike);
 
-  // Implied (on-bike) fills, multi-slot, skipping any slot with an explicit link.
+  // Implied (on-bike) fills. A part fills the slots it matches, but within an
+  // exclusive group (front/rear caliper, left/right lever, front/rear tire) a
+  // single unit fills only one slot — so we auto-fill a group only when it's
+  // unambiguous (matched slots <= units on this bike) and the user hasn't begun
+  // linking that group by hand. Ambiguous groups wait for an explicit link.
   const impliedByKey: Record<string, string> = {};
   for (const p of onBike) {
-    for (const key of matchItemsForPart(p as PartRecord, config, ctx)) {
-      if (key in explicitLinks) continue; // explicit override wins
-      if (key in impliedByKey) continue; // first on-bike part claims the slot
-      impliedByKey[key] = p.id;
+    const matched = matchItemsForPart(p as PartRecord, config, ctx);
+    const units = unitsOnBike(p, bike.id);
+    const handledGroups = new Set<readonly string[]>();
+    for (const key of matched) {
+      const group = exclusiveGroupOf(key);
+      if (!group) {
+        // Free slot (shifter, derailleur, single-position wheel, …): claim it.
+        if (key in explicitLinks || key in impliedByKey) continue;
+        impliedByKey[key] = p.id;
+        continue;
+      }
+      if (handledGroups.has(group)) continue;
+      handledGroups.add(group);
+      // User is managing this group by hand for this part — leave it alone.
+      if (group.some((k) => explicitLinks[k] === p.id)) continue;
+      const candidates = matched.filter(
+        (k) => group.includes(k) && !(k in explicitLinks) && !(k in impliedByKey)
+      );
+      if (candidates.length === 0 || candidates.length > units) continue; // ambiguous
+      for (const k of candidates) impliedByKey[k] = p.id;
     }
   }
 
@@ -105,7 +126,9 @@ export const load: PageServerLoad = async (event) => {
   const rawView = event.url.searchParams.get('view');
   const view = rawView === 'installed' || rawView === 'needed' ? rawView : 'all';
 
-  return { bike, config, checkedItems, links, view, ctx };
+  const notes = typeof progress.notes === 'string' ? progress.notes : '';
+
+  return { bike, config, checkedItems, links, view, ctx, notes };
 };
 
 export const actions: Actions = {
@@ -132,6 +155,21 @@ export const actions: Actions = {
     return { saved: true };
   },
 
+  // Persist the free-text build notes. No-JS: a form POST that redirects back.
+  // JS enhancement debounce-submits this same action as the textarea changes.
+  saveNotes: async (event) => {
+    const user = requireUser(event);
+    const pb = event.locals.pb;
+    const form = await event.request.formData();
+    const notes = String(form.get('notes') ?? '').slice(0, 10000);
+
+    const progress = await getOrCreateProgress(pb, event.params.id, user.id);
+    await pb.collection('checklist_progress').update(progress.id, { notes });
+
+    if (form.get('__noscript') === '1') throw redirect(303, `/bikes/${event.params.id}/checklist#notes`);
+    return { saved: true };
+  },
+
   // Remove a part from this bike entirely (and from every slot it filled here):
   // drop the bike from the part's `bikes`, and clear any explicit links + checks
   // pointing at it on this bike.
@@ -148,7 +186,18 @@ export const actions: Actions = {
         const bikes = (Array.isArray(part.bikes) ? (part.bikes as string[]) : []).filter(
           (b) => b !== bikeId
         );
-        await pb.collection('parts').update(partId, { bikes });
+        // Drop every unit of this part from this bike (Remove = off the bike).
+        const bikeQty: Record<string, number> = {};
+        const rawQty = part.bike_qty;
+        if (rawQty && typeof rawQty === 'object') {
+          for (const [b, n] of Object.entries(rawQty as Record<string, unknown>)) {
+            const v = Math.floor(Number(n));
+            if (b && b !== bikeId && Number.isFinite(v) && v > 0) bikeQty[b] = v;
+          }
+        } else {
+          for (const b of bikes) bikeQty[b] = 1;
+        }
+        await pb.collection('parts').update(partId, { bikes, bike_qty: bikeQty });
       } catch {
         /* part missing — ignore */
       }

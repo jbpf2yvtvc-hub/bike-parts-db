@@ -7,6 +7,7 @@ import {
   removePartFromBikeLinks,
   buildChecklistContext
 } from '$lib/server/checklist';
+import { unitsOnBike, totalUnitsAssigned } from '$lib/server/parts';
 import { findItem, getTitle } from '$lib/checklist-data';
 import { getLabel } from '$lib/schema-utils';
 import {
@@ -29,13 +30,12 @@ function summarize(part: any, bikeId: string) {
     .slice(0, 4)
     .map(([, v]) => (Array.isArray(v) ? v.join(', ') : String(v)));
 
-  const bikeIds: string[] = Array.isArray(part.bikes) ? part.bikes : [];
   const otherBikes: { id: string; name: string }[] = (part.expand?.bikes ?? [])
     .filter((b: any) => b.id !== bikeId)
     .map((b: any) => ({ id: b.id, name: b.name }));
   const quantity = part.quantity ?? 1;
-  const onThisBike = bikeIds.includes(bikeId);
-  const available = Math.max(0, quantity - bikeIds.length); // units not yet on a bike
+  const onThisBike = unitsOnBike(part, bikeId) > 0;
+  const available = Math.max(0, quantity - totalUnitsAssigned(part)); // units not yet on a bike
 
   let status: string;
   if (onThisBike) status = 'On this bike ✓';
@@ -154,23 +154,53 @@ export const actions: Actions = {
     }
 
     const quantity = (part.quantity as number) || 1;
-    let bikes: string[] = Array.isArray(part.bikes) ? [...part.bikes] : [];
 
-    if (!bikes.includes(bikeId)) {
-      if (bikes.length < quantity) {
-        // A free unit is available — just put it on this bike.
-        bikes.push(bikeId);
-        await pb.collection('parts').update(partId, { bikes });
+    // Per-bike unit counts (backfill legacy one-unit-per-bike records).
+    const bikeQty: Record<string, number> = {};
+    const rawQty = part.bike_qty;
+    if (rawQty && typeof rawQty === 'object') {
+      for (const [b, n] of Object.entries(rawQty as Record<string, unknown>)) {
+        const v = Math.floor(Number(n));
+        if (b && Number.isFinite(v) && v > 0) bikeQty[b] = v;
+      }
+    } else if (Array.isArray(part.bikes)) {
+      for (const b of part.bikes as string[]) bikeQty[b] = 1;
+    }
+
+    const progress = await getOrCreateProgress(pb, bikeId, user.id);
+    const links: Record<string, string> =
+      progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
+
+    // Each explicit link of this part on THIS bike needs its own unit, so
+    // linking a second slot to the same part (e.g. an `either` brake on front
+    // then rear) consumes a second unit.
+    const slotsHere = new Set(
+      Object.entries(links).filter(([, id]) => id === partId).map(([k]) => k)
+    );
+    slotsHere.add(itemKey);
+    const neededHere = slotsHere.size;
+    const unitsHere = bikeQty[bikeId] ?? 0;
+
+    if (unitsHere < neededHere) {
+      const assigned = Object.values(bikeQty).reduce((a, b) => a + b, 0);
+      if (assigned < quantity) {
+        // A free unit is available — place one more on this bike.
+        bikeQty[bikeId] = unitsHere + 1;
       } else if (confirmed) {
         // Fully assigned elsewhere — switch one unit off a chosen prior bike
         // (`from`), defaulting to the first if none/invalid was supplied.
-        const others = bikes.filter((b) => b !== bikeId);
+        const others = Object.keys(bikeQty).filter((b) => b !== bikeId);
         const requested = String(form.get('from') ?? '');
         const prior = others.includes(requested) ? requested : others[0];
-        bikes = bikes.filter((b) => b !== prior);
-        bikes.push(bikeId);
-        await pb.collection('parts').update(partId, { bikes });
-        if (prior) await removePartFromBikeLinks(pb, prior, partId);
+        if (prior) {
+          bikeQty[prior] = (bikeQty[prior] ?? 1) - 1;
+          if (bikeQty[prior] <= 0) {
+            delete bikeQty[prior];
+            // That bike has no units left — drop its links/checks for this part.
+            await removePartFromBikeLinks(pb, prior, partId);
+          }
+          bikeQty[bikeId] = unitsHere + 1;
+        }
       } else {
         // Needs confirmation (no-JS path; the JS dialog posts confirm=1).
         throw redirect(
@@ -178,12 +208,12 @@ export const actions: Actions = {
           `/bikes/${bikeId}/checklist/link-part/switch?item=${encodeURIComponent(itemKey)}&partId=${partId}`
         );
       }
+      await pb
+        .collection('parts')
+        .update(partId, { bike_qty: bikeQty, bikes: Object.keys(bikeQty) });
     }
 
     // Record the explicit item link + check it off on this bike.
-    const progress = await getOrCreateProgress(pb, bikeId, user.id);
-    const links: Record<string, string> =
-      progress.part_links && typeof progress.part_links === 'object' ? progress.part_links : {};
     links[itemKey] = partId;
     const checkedItems: string[] = Array.isArray(progress.checked_items)
       ? progress.checked_items

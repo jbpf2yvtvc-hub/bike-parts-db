@@ -2,7 +2,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { getSchema } from '$lib/schema-utils';
-import { loadBikeOptions, parsePartForm, toRecord } from '$lib/server/parts';
+import {
+  loadBikeOptions,
+  loadAssociationOptions,
+  parsePartForm,
+  toRecord
+} from '$lib/server/parts';
 
 export const load: PageServerLoad = async (event) => {
   const user = requireUser(event);
@@ -18,7 +23,13 @@ export const load: PageServerLoad = async (event) => {
   return {
     part,
     schema,
-    bikes: await loadBikeOptions(event.locals.pb, user.id)
+    bikes: await loadBikeOptions(event.locals.pb, user.id),
+    assocOptions: await loadAssociationOptions(
+      event.locals.pb,
+      user.id,
+      part.type_id,
+      part.associations
+    )
   };
 };
 

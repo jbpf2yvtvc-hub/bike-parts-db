@@ -51,7 +51,11 @@
         <p class="font-condensed text-lg font-semibold">{p.title}</p>
         {#if p.keyAttrs.length}
           <p class="mt-1 flex flex-wrap gap-1">
-            {#each p.keyAttrs as a (a)}
+            <!-- Key by index: keyAttrs are raw attribute *values*, which can
+                 collide (e.g. a stem with angle_deg 80 and length_mm 80 yields
+                 two "80" chips). A value key would throw each_key_duplicate and
+                 abort the navigation, stranding you on the checklist. -->
+            {#each p.keyAttrs as a, i (i)}
               <span class="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-ink-muted">{a}</span>
             {/each}
           </p>

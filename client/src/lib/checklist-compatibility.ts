@@ -37,10 +37,10 @@ const ITEM_TYPE: Record<string, string> = {
   'frame::headset-threadless': 'headset',
   'stem::stem-quill': 'stem',
   'stem::stem-threadless': 'stem',
-  'bars::handlebar-flat': 'handlebar',
-  'bars::handlebar-drop': 'handlebar',
-  'bars::handlebar-cruiser': 'handlebar',
-  'bars::handlebar-alt': 'handlebar',
+  'stem::handlebar-flat': 'handlebar',
+  'stem::handlebar-drop': 'handlebar',
+  'stem::handlebar-cruiser': 'handlebar',
+  'stem::handlebar-alt': 'handlebar',
   'bb::bottom-bracket': 'bottom_bracket',
   'bb::eccentric-bb': 'eccentric_bb',
   'bb::crankset': 'crankset',
@@ -58,6 +58,8 @@ const ITEM_TYPE: Record<string, string> = {
   'brakes::lever-right': 'brake_lever',
   'wheels::front-wheel': 'wheel',
   'wheels::rear-wheel': 'wheel',
+  'wheels::front-tire': 'tire',
+  'wheels::rear-tire': 'tire',
   // Seatpost & saddle now live under the Cockpit (stem) section.
   'stem::seatpost': 'seatpost',
   'stem::seatpost-clamp': 'seatpost_clamp',
@@ -66,6 +68,25 @@ const ITEM_TYPE: Record<string, string> = {
 
 export function getTypeIdForItem(itemKey: string): string | null {
   return ITEM_TYPE[itemKey] ?? null;
+}
+
+/**
+ * Slots that are position/hand variants of the SAME physical component. A
+ * single unit of a part fills only ONE slot within a group, so a part that
+ * matches several members (an `either` caliper/tire, a `pair` lever) must not
+ * silently auto-fill all of them. Auto-fill happens for a group only when it is
+ * unambiguous (matched slots ≤ units on the bike) and the user hasn't started
+ * linking that group by hand. Cross-group multi-match is unaffected: a brifter
+ * legitimately fills its shifter slot AND its brake-lever slot.
+ */
+export const EXCLUSIVE_GROUPS: readonly (readonly string[])[] = [
+  ['brakes::caliper-front', 'brakes::caliper-rear'],
+  ['brakes::lever-left', 'brakes::lever-right'],
+  ['wheels::front-tire', 'wheels::rear-tire']
+];
+
+export function exclusiveGroupOf(itemKey: string): readonly string[] | null {
+  return EXCLUSIVE_GROUPS.find((g) => g.includes(itemKey)) ?? null;
 }
 
 export function getCompatibilityFilter(
@@ -98,13 +119,15 @@ export function getCompatibilityFilter(
     case 'stem::stem-threadless':
       return "type_id='stem' && attributes.style~'threadless'";
 
-    case 'bars::handlebar-flat':
+    // Handlebar lives under Cockpit now (stem:: keys). Matched on bar style
+    // only — clamp diameter is intentionally NOT enforced (shims/adapters).
+    case 'stem::handlebar-flat':
       return "type_id='handlebar' && attributes.style~'flat'";
-    case 'bars::handlebar-drop':
+    case 'stem::handlebar-drop':
       return "type_id='handlebar' && attributes.style~'drop'";
-    case 'bars::handlebar-cruiser':
+    case 'stem::handlebar-cruiser':
       return "type_id='handlebar' && attributes.style~'cruiser'";
-    case 'bars::handlebar-alt':
+    case 'stem::handlebar-alt':
       return "type_id='handlebar' && attributes.style~'alt'";
 
     case 'bb::bottom-bracket':
@@ -187,6 +210,12 @@ export function getCompatibilityFilter(
         "type_id='wheel' && attributes.position='rear'",
         wheelBrakeTypeFilterForMount(ctx.frameBrakeMount)
       );
+
+    // Tires: a part tagged 'either' fits both the front and rear slot.
+    case 'wheels::front-tire':
+      return "type_id='tire' && (attributes.position='front' || attributes.position='either')";
+    case 'wheels::rear-tire':
+      return "type_id='tire' && (attributes.position='rear' || attributes.position='either')";
 
     case 'stem::seatpost':
       return "type_id='seatpost'";

@@ -1,0 +1,35 @@
+{
+  "type_id": "chainring",
+  "label": "Chainring",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "teeth", "label": "Teeth", "type": "number", "inputmode": "numeric", "required": true, "searchable": true, "hint": "e.g. 50, 34, 42" },
+    {
+      "id": "mount",
+      "label": "Mount",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "hint": "How it attaches to the crank — a spider BCD, or a direct-mount standard",
+      "options": ["spider (4-arm)", "spider (5-arm)", "direct mount (3-bolt)", "direct mount (8-bolt)", "direct mount (other)", "other"]
+    },
+    { "id": "bcd_mm", "label": "BCD (mm)", "type": "number", "inputmode": "decimal", "searchable": true, "hint": "Bolt circle diameter for spider-mount rings; leave blank for direct mount" },
+    {
+      "id": "position",
+      "label": "Position",
+      "type": "select",
+      "searchable": true,
+      "options": ["single", "outer", "middle", "inner"]
+    },
+    {
+      "id": "speed",
+      "label": "Speed compatibility",
+      "type": "select",
+      "searchable": true,
+      "options": ["any / not specified", "9", "10", "11", "12"]
+    },
+    { "id": "color", "label": "Colour", "type": "text", "searchable": true },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}

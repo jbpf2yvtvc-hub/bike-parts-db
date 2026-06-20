@@ -38,10 +38,26 @@
 {#if part.expand?.bikes?.length}
   <p class="mb-4 flex flex-wrap items-center gap-1 text-ink-muted">
     <MapPin size={16} aria-hidden="true" /> On {part.expand.bikes.length === 1 ? 'bike' : 'bikes'}:
-    {#each part.expand.bikes as b, i (b.id)}<a href={`/bikes/${b.id}`} class="text-accent underline">{b.name}</a>{#if i < part.expand.bikes.length - 1}<span>,</span>{/if}{/each}
+    {#each part.expand.bikes as b, i (b.id)}<a href={`/bikes/${b.id}`} class="text-accent underline">{b.name}</a>{#if (part.bike_qty?.[b.id] ?? 1) > 1}<span class="text-ink">&nbsp;×{part.bike_qty[b.id]}</span>{/if}{#if i < part.expand.bikes.length - 1}<span>,</span>{/if}{/each}
   </p>
 {:else}
   <p class="mb-4 text-ink-muted">Not on a bike.</p>
+{/if}
+
+{#if data.associations?.length}
+  <div class="mb-4 rounded-lg border border-border bg-surface p-4">
+    <h2 class="mb-2 font-condensed text-lg font-semibold">Associated parts</h2>
+    <dl class="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+      {#each data.associations as a (a.label)}
+        <div>
+          <dt class="text-sm text-ink-muted">{a.label}</dt>
+          <dd class="font-medium">
+            {#each a.parts as p, i (p.id)}<a href={`/parts/${p.id}`} class="text-accent underline">{p.title}</a>{#if i < a.parts.length - 1}<span>, </span>{/if}{/each}
+          </dd>
+        </div>
+      {/each}
+    </dl>
+  </div>
 {/if}
 
 {#if data.schema}

@@ -34,6 +34,7 @@
     <PartForm
       schema={data.schema}
       bikes={data.bikes}
+      assocOptions={data.assocOptions}
       attributes={form?.values ?? {}}
       meta={form?.meta ?? {}}
       errors={form?.errors ?? {}}

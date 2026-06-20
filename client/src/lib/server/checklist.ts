@@ -22,7 +22,8 @@ export async function getOrCreateProgress(pb: PocketBase, bikeId: string, ownerI
       owner: ownerId,
       config: DEFAULT_CONFIG,
       checked_items: [],
-      part_links: {}
+      part_links: {},
+      notes: ''
     });
   }
 }

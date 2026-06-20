@@ -12,10 +12,15 @@
   );
   const qty = $derived(part.quantity ?? 1);
   const bikeNames = $derived((part.expand?.bikes ?? []).map((b) => b.name));
-  // Surface front/rear for wheels so otherwise-identical wheels are distinct.
-  const position = $derived(
-    part.type_id === 'wheel' ? String(part.attributes?.position ?? '') : ''
-  );
+  // A short distinguisher in the type line so otherwise-identical parts are
+  // easy to tell apart: front/rear for wheels & tires, spindle length for BBs.
+  const distinguisher = $derived.by(() => {
+    const a = part.attributes ?? {};
+    if (part.type_id === 'wheel' || part.type_id === 'tire') return String(a.position ?? '');
+    if (part.type_id === 'bottom_bracket' && a.spindle_length_mm != null && a.spindle_length_mm !== '')
+      return `${a.spindle_length_mm}mm spindle`;
+    return '';
+  });
 </script>
 
 <a
@@ -25,7 +30,7 @@
   <div class="flex items-start justify-between gap-2">
     <div>
       <p class="text-xs uppercase tracking-wide text-ink-muted">
-        {getLabel(part.type_id)}{#if position} · {position}{/if}
+        {getLabel(part.type_id)}{#if distinguisher} · {distinguisher}{/if}
       </p>
       <h3 class="font-condensed text-lg font-semibold text-ink">
         {title}{#if qty > 1}<span class="ml-1 text-sm font-normal text-ink-muted">×{qty}</span>{/if}

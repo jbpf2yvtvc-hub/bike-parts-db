@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
+  import { beforeNavigate } from '$app/navigation';
   import {
     SECTIONS,
     itemVisible,
@@ -13,7 +14,7 @@
   } from '$lib/checklist-data';
   import { getCompatibilityFilter } from '$lib/checklist-compatibility';
   import { getLabel } from '$lib/schema-utils';
-  import { TriangleAlert, Link2, MapPin, Plus, Check, ChevronDown } from '@lucide/svelte';
+  import { TriangleAlert, Link2, MapPin, Plus, Check, ChevronDown, StickyNote } from '@lucide/svelte';
 
   type ViewFilter = 'all' | 'installed' | 'needed';
 
@@ -22,6 +23,7 @@
   // Seed local state from the server load (intentionally initial-only).
   let config = $state<ChecklistConfig>(untrack(() => ({ ...data.config })));
   let checked = $state(new Set<string>(untrack(() => data.checkedItems)));
+  let notes = $state<string>(untrack(() => data.notes ?? ''));
   let view = $state<ViewFilter>(untrack(() => data.view));
   let mounted = $state(false);
   onMount(() => (mounted = true));
@@ -65,24 +67,61 @@
   }
 
   // --- JS enhancement: debounced persistence (§9.1, step 17) -----------------
+  // Each change is saved on a short debounce. The saver is also stashed in
+  // `pendingSaves` so a not-yet-fired save can be flushed before we leave the
+  // page (below) rather than silently dropped — e.g. toggling the stem
+  // converter and immediately clicking "Link a part". `keepalive` lets a save
+  // that fires mid-navigation (or on unload) still reach the server.
   let cfgTimer: ReturnType<typeof setTimeout>;
   let chkTimer: ReturnType<typeof setTimeout>;
+  let notesTimer: ReturnType<typeof setTimeout>;
+  const pendingSaves = new Set<() => void>();
+
+  // Stable savers — they read the latest reactive state at call time, so they
+  // send current values whether fired by the debounce or by a flush.
+  function saveConfig() {
+    // Absolute path — a relative 'config' would resolve to /bikes/<id>/config
+    // (the page has no trailing slash) and silently 404, losing the config.
+    void fetch(`/bikes/${bikeId}/checklist/config`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(config),
+      keepalive: true
+    });
+  }
+  function saveChecks() {
+    const fd = new FormData();
+    for (const k of checked) fd.append('checked', k);
+    void fetch(`/bikes/${bikeId}/checklist?/saveChecks`, { method: 'POST', body: fd, keepalive: true });
+  }
+  function saveNotes() {
+    const fd = new FormData();
+    fd.append('notes', notes);
+    void fetch(`/bikes/${bikeId}/checklist?/saveNotes`, { method: 'POST', body: fd, keepalive: true });
+  }
+
+  // Debounce a saver: cancel the prior timer, mark it pending, and fire after
+  // `delay`. A stable saver reference means re-triggering the same type just
+  // resets its single pending entry rather than queuing duplicates.
+  function debounce(
+    timer: ReturnType<typeof setTimeout>,
+    save: () => void,
+    delay: number
+  ): ReturnType<typeof setTimeout> {
+    clearTimeout(timer);
+    pendingSaves.add(save);
+    return setTimeout(() => {
+      pendingSaves.delete(save);
+      save();
+    }, delay);
+  }
 
   function onConfigChange() {
     // Mirror the server-side normalisation: tension only applies to 1-speed,
     // and a stem converter only to a threaded steerer.
     if (config.rear_speeds !== '1') config.tension = 'horizontal';
     if (config.fork !== 'threaded') config.stem_converter = false;
-    clearTimeout(cfgTimer);
-    cfgTimer = setTimeout(async () => {
-      // Absolute path — a relative 'config' would resolve to /bikes/<id>/config
-      // (the page has no trailing slash) and silently 404, losing the config.
-      await fetch(`/bikes/${bikeId}/checklist/config`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(config)
-      });
-    }, 350);
+    cfgTimer = debounce(cfgTimer, saveConfig, 350);
   }
 
   function toggleCheck(key: string) {
@@ -91,13 +130,25 @@
     if (next.has(key)) next.delete(key);
     else next.add(key);
     checked = next;
-    clearTimeout(chkTimer);
-    chkTimer = setTimeout(async () => {
-      const fd = new FormData();
-      for (const k of checked) fd.append('checked', k);
-      await fetch('?/saveChecks', { method: 'POST', body: fd });
-    }, 400);
+    chkTimer = debounce(chkTimer, saveChecks, 400);
   }
+
+  function onNotesChange() {
+    // Optimistic local state is already bound; debounce-save the text.
+    notesTimer = debounce(notesTimer, saveNotes, 500);
+  }
+
+  // Flush any pending save before leaving the page (SvelteKit navigation, a
+  // full reload, or closing the tab — beforeNavigate covers all three), so a
+  // change made within the debounce window isn't lost on the way out.
+  function flushPendingSaves() {
+    clearTimeout(cfgTimer);
+    clearTimeout(chkTimer);
+    clearTimeout(notesTimer);
+    for (const save of pendingSaves) save();
+    pendingSaves.clear();
+  }
+  beforeNavigate(flushPendingSaves);
 
   function linkStatus(p: any): string {
     if (!p) return '';
@@ -122,6 +173,9 @@
 <header class="mb-2">
   <h1 class="font-display text-4xl tracking-wide text-accent">Build checklist</h1>
   <p class="font-condensed text-lg text-ink-muted">{data.bike.name} — {subtitle}</p>
+  <a href="#notes" class="mt-1 inline-flex items-center gap-1 text-sm text-accent underline">
+    <StickyNote size={14} aria-hidden="true" /> Build notes
+  </a>
 </header>
 
 <!-- Sticky configurator bar with yellow bottom border (§9.6). -->
@@ -399,6 +453,39 @@
     </button>
   {/if}
 </form>
+
+<!-- Build notes: free-text details that don't belong in the parts inventory
+     (specific cable ends, which housing, etc.). Own form so no-JS Save works;
+     JS debounce-autosaves on input. -->
+<section id="notes" class="mt-8 scroll-mt-24 overflow-hidden rounded-lg border border-border bg-surface">
+  <div class="flex items-center gap-2 border-l-4 border-accent py-3 pl-3 pr-4">
+    <StickyNote size={18} class="shrink-0 text-ink-muted" aria-hidden="true" />
+    <h2 class="text-xl font-bold uppercase tracking-wide">Notes</h2>
+  </div>
+  <form method="POST" action="?/saveNotes" class="p-4">
+    <input type="hidden" name="__noscript" value="1" />
+    <label class="block text-sm">
+      <span class="text-ink-muted">
+        Build-specific details — special cable ends, which housing to use, torque values, etc.
+      </span>
+      <textarea
+        name="notes"
+        rows="6"
+        bind:value={notes}
+        oninput={() => mounted && onNotesChange()}
+        placeholder="e.g. rear shift housing: Jagwire LEX-SL; sealed cable ends on the down-tube run…"
+        class="mt-2 w-full rounded border border-border bg-surface-2 px-3 py-2 font-condensed text-base"
+      ></textarea>
+    </label>
+    {#if mounted}
+      <p class="mt-2 text-xs text-ink-muted">Saved automatically.</p>
+    {:else}
+      <button type="submit" class="mt-3 min-h-[44px] rounded-md bg-accent px-8 py-2 font-semibold text-accent-ink">
+        <Check size={18} class="mr-1 inline" aria-hidden="true" /> Save notes
+      </button>
+    {/if}
+  </form>
+</section>
 
 <p class="mt-8 text-sm text-ink-muted">
   Missing a part? <a href="/parts/new" class="text-accent underline inline-flex items-center gap-1"><Plus size={14} aria-hidden="true" /> Add a part</a>

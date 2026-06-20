@@ -2,7 +2,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { getSchema, listSchemas } from '$lib/schema-utils';
-import { loadBikeOptions, parsePartForm, toRecord } from '$lib/server/parts';
+import {
+  loadBikeOptions,
+  loadAssociationOptions,
+  parsePartForm,
+  toRecord
+} from '$lib/server/parts';
 
 export const load: PageServerLoad = async (event) => {
   const user = requireUser(event);
@@ -13,7 +18,8 @@ export const load: PageServerLoad = async (event) => {
     typeId,
     schema: schema ?? null,
     schemas: listSchemas().map((s) => ({ type_id: s.type_id, label: s.label })),
-    bikes: await loadBikeOptions(event.locals.pb, user.id)
+    bikes: await loadBikeOptions(event.locals.pb, user.id),
+    assocOptions: typeId ? await loadAssociationOptions(event.locals.pb, user.id, typeId, {}) : []
   };
 };
 

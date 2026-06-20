@@ -20,8 +20,8 @@ See [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md) for the full spec
 ## Features
 
 - **Schema-driven parts.** Each part type is a JSON file in `schemas/`; forms,
-  Zod validation, search, and checklist filters all derive from it. 21 types
-  ship (frame, fork, drivetrain, wheels, brakes, single-speed, etc.).
+  Zod validation, search, and checklist filters all derive from it. 24 types
+  ship (frame, fork, drivetrain, chainrings, wheels, tires, brakes, etc.).
 - **Quantity & multi-bike.** A part has a quantity and can be installed on up to
   that many bikes (one unit each); the add/edit form caps the selection.
 - **Bikes** with their own records; parts reference the bikes they're on.

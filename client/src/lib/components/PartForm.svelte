@@ -5,9 +5,20 @@
   import { DISPOSITIONS } from '$lib/types';
   import type { FieldDef, PartSchema } from '$lib/schema-utils';
 
+  interface AssocOption {
+    role: string;
+    label: string;
+    targetType: string;
+    multiple: boolean;
+    hint?: string;
+    candidates: { id: string; title: string }[];
+    selected: string[];
+  }
+
   let {
     schema,
     bikes = [],
+    assocOptions = [],
     attributes = {},
     meta = {},
     errors = {},
@@ -15,27 +26,52 @@
   }: {
     schema: PartSchema;
     bikes?: { id: string; name: string }[];
+    assocOptions?: AssocOption[];
     attributes?: Record<string, unknown>;
     meta?: Record<string, any>;
     errors?: Record<string, string>;
     submitLabel?: string;
   } = $props();
 
+  // Selected associations by role. Prefer resubmitted values (meta.associations)
+  // over the stored selection carried on each option.
+  function initialSelected(o: AssocOption): string[] {
+    const fromMeta = meta?.associations?.[o.role];
+    if (Array.isArray(fromMeta)) return fromMeta.map(String);
+    return o.selected ?? [];
+  }
+
   const input = 'mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2';
 
-  // Quantity + multi-bike assignment. A part can be on at most `quantity`
-  // bikes (one unit each). When the cap is reached, unchecked bikes disable.
+  // Quantity + per-bike assignment. A part with quantity N can place up to N
+  // units total, and more than one on the same bike (e.g. two `either` brakes
+  // on one bike). Each bike gets a unit count, capped by what's still available.
   let quantity = $state(untrack(() => Math.max(1, Number(meta.quantity) || 1)));
-  let selected = $state(
-    untrack(() => new Set<string>(Array.isArray(meta.bikes) ? meta.bikes : []))
+  let counts = $state<Record<string, number>>(
+    untrack(() => {
+      const seed: Record<string, number> = {};
+      const q = meta.bike_qty;
+      if (q && typeof q === 'object') {
+        for (const [id, n] of Object.entries(q)) {
+          const v = Math.floor(Number(n));
+          if (id && Number.isFinite(v) && v > 0) seed[id] = v;
+        }
+      } else if (Array.isArray(meta.bikes)) {
+        for (const id of meta.bikes) seed[id] = (seed[id] ?? 0) + 1;
+      }
+      return seed;
+    })
   );
-  const atCap = $derived(selected.size >= quantity);
 
-  function toggleBike(id: string, checked: boolean) {
-    const next = new Set(selected);
-    if (checked) next.add(id);
-    else next.delete(id);
-    selected = next;
+  const assigned = $derived(Object.values(counts).reduce((a, b) => a + b, 0));
+  const available = $derived(Math.max(0, quantity - assigned));
+
+  function setCount(id: string, n: number) {
+    const next = { ...counts };
+    const v = Math.max(0, Math.floor(Number.isFinite(n) ? n : 0));
+    if (v > 0) next[id] = v;
+    else delete next[id];
+    counts = next;
   }
 
   // Conditional fields (showWhen): reactive with JS, always shown with no JS.
@@ -64,6 +100,47 @@
     {/if}
   {/each}
 
+  {#if assocOptions.length}
+    <fieldset class="mt-6 space-y-4 border-t border-border pt-6">
+      <legend class="font-condensed text-lg font-semibold">Associated parts</legend>
+      {#each assocOptions as o (o.role)}
+        {@const sel = initialSelected(o)}
+        <div>
+          <span class="block font-medium">{o.label}</span>
+          {#if o.hint}<p class="mt-1 text-sm text-ink-muted">{o.hint}</p>{/if}
+          {#if o.candidates.length === 0}
+            <p class="mt-1 text-sm text-ink-muted">
+              No {o.label.toLowerCase()} in your inventory yet —
+              <a href={`/parts/new?type=${o.targetType}`} class="text-accent underline">add one</a> first.
+            </p>
+          {:else if o.multiple}
+            <div class="mt-2 space-y-1">
+              {#each o.candidates as c (c.id)}
+                <label class="flex min-h-[44px] items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name={`assoc.${o.role}`}
+                    value={c.id}
+                    checked={sel.includes(c.id)}
+                    class="h-5 w-5 rounded border-border bg-surface-2"
+                  />
+                  <span>{c.title}</span>
+                </label>
+              {/each}
+            </div>
+          {:else}
+            <select name={`assoc.${o.role}`} class={input}>
+              <option value="">— none —</option>
+              {#each o.candidates as c (c.id)}
+                <option value={c.id} selected={sel.includes(c.id)}>{c.title}</option>
+              {/each}
+            </select>
+          {/if}
+        </div>
+      {/each}
+    </fieldset>
+  {/if}
+
   <fieldset class="mt-6 space-y-4 border-t border-border pt-6">
     <legend class="font-condensed text-lg font-semibold">Inventory details</legend>
 
@@ -86,7 +163,8 @@
     <fieldset>
       <legend class="block font-medium">On bike(s)</legend>
       <p class="mt-1 text-sm text-ink-muted">
-        Assign to up to {quantity} bike{quantity === 1 ? '' : 's'} (one per unit).
+        Assign units across your bikes — up to {quantity} total ({available} still available).
+        More than one can go on the same bike.
       </p>
       {#if errors.bikes}
         <p class="mt-1 text-sm text-red-400">{errors.bikes}</p>
@@ -94,18 +172,21 @@
       {#if bikes.length}
         <div class="mt-2 space-y-1">
           {#each bikes as b (b.id)}
-            {@const isSel = selected.has(b.id)}
-            <label class="flex min-h-[44px] items-center gap-2 {!isSel && atCap ? 'opacity-50' : ''}">
-              <input
-                type="checkbox"
-                name="bikes"
-                value={b.id}
-                checked={isSel}
-                disabled={!isSel && atCap}
-                onchange={(e) => toggleBike(b.id, e.currentTarget.checked)}
-                class="h-5 w-5 rounded border-border bg-surface-2 disabled:cursor-not-allowed"
-              />
+            {@const count = counts[b.id] ?? 0}
+            <label class="flex min-h-[44px] items-center justify-between gap-2">
               <span>{b.name}</span>
+              <input
+                type="number"
+                inputmode="numeric"
+                name={`bike_qty.${b.id}`}
+                min="0"
+                max={count + available}
+                step="1"
+                value={count}
+                onchange={(e) => setCount(b.id, Number(e.currentTarget.value))}
+                aria-label={`Units of this part on ${b.name}`}
+                class="w-20 min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2 text-right"
+              />
             </label>
           {/each}
         </div>

@@ -13,6 +13,14 @@
       "hint": "Number of front chainrings",
       "options": ["1", "2", "3"]
     },
+    {
+      "id": "chainring_mount",
+      "label": "Chainring mount",
+      "type": "select",
+      "searchable": true,
+      "hint": "How chainrings attach — a bolted spider, or direct mount. Chainrings (and any spider) are tracked as associated parts.",
+      "options": ["spider (4-arm)", "spider (5-arm)", "direct mount (3-bolt)", "direct mount (8-bolt)", "direct mount (other)", "other"]
+    },
     { "id": "bcd_outer", "label": "BCD outer (mm)", "type": "number", "inputmode": "decimal" },
     { "id": "bcd_inner", "label": "BCD inner (mm)", "type": "number", "inputmode": "decimal", "hint": "Leave blank for 1×" },
     { "id": "chainring_teeth", "label": "Chainring teeth", "type": "text", "searchable": true, "hint": "e.g. 50/34 or 42" },

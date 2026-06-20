@@ -1,0 +1,33 @@
+{
+  "type_id": "tire",
+  "label": "Tire",
+  "fields": [
+    { "id": "brand", "label": "Brand", "type": "text", "searchable": true, "autocomplete": "off" },
+    { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
+    {
+      "id": "position",
+      "label": "Position",
+      "type": "select",
+      "required": true,
+      "searchable": true,
+      "hint": "“either” fits both the front and rear tire slots on the build checklist",
+      "options": ["front", "rear", "either"]
+    },
+    {
+      "id": "size",
+      "label": "Size",
+      "type": "text",
+      "searchable": true,
+      "hint": "e.g. 700x28c, 27.5x2.1, 26x1.95"
+    },
+    {
+      "id": "casing",
+      "label": "Casing / type",
+      "type": "select",
+      "searchable": true,
+      "options": ["clincher", "folding clincher", "tubeless (TLR)", "tubular"]
+    },
+    { "id": "color", "label": "Colour", "type": "text", "searchable": true },
+    { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
+  ]
+}
