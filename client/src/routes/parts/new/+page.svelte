@@ -24,7 +24,7 @@
       {/each}
     </select>
     <noscript>
-      <button type="submit" class="min-h-[44px] rounded-md border border-border px-4 py-2">Choose</button>
+      <button type="submit" class="btn btn-secondary">Choose</button>
     </noscript>
   </div>
 </form>

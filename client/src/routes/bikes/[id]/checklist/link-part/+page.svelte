@@ -32,12 +32,12 @@
 <div class="mb-6 flex flex-wrap gap-3">
   <a
     href={addHref}
-    class="btn inline-flex min-h-[44px] items-center gap-1 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
+    class="btn btn-primary"
   >
     <Plus size={16} aria-hidden="true" /> Add a new part
   </a>
   {#if !data.showAll}
-    <a href={showAllHref} class="btn inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 font-medium">
+    <a href={showAllHref} class="btn btn-secondary">
       Show all parts anyway
     </a>
   {/if}
@@ -89,7 +89,7 @@
           <form method="POST" action="?/linkPart">
             <input type="hidden" name="item" value={data.itemKey} />
             <input type="hidden" name="partId" value={p.id} />
-            <button type="submit" class="inline-flex min-h-[44px] items-center rounded-md bg-accent px-4 py-2 font-medium text-accent-ink">
+            <button type="submit" class="btn btn-primary">
               Link
             </button>
           </form>

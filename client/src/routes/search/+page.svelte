@@ -35,7 +35,7 @@
     autocomplete="off"
     class="block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2"
   />
-  <button type="submit" class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
+  <button type="submit" class="btn btn-primary">
     <Search size={18} aria-hidden="true" /> Search
   </button>
 </form>

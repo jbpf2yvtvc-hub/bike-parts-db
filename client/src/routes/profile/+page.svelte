@@ -16,7 +16,7 @@
   </p>
 {/if}
 {#if form?.error}
-  <p role="alert" class="mb-4 rounded-md border border-red-500/50 bg-red-500/10 p-3 text-red-300">{form.error}</p>
+  <p role="alert" class="mb-4 rounded-md border border-danger-fg/50 bg-danger-fg/10 p-3 text-danger-fg">{form.error}</p>
 {/if}
 
 <form method="POST" enctype="multipart/form-data" use:enhance class="space-y-4">
@@ -59,7 +59,7 @@
     <label for="bio" class="block font-medium">Bio</label>
     <textarea id="bio" name="bio" rows="3" maxlength="280" aria-describedby="bio-hint bio-error" class={input}>{p.bio}</textarea>
     <p id="bio-hint" class="mt-1 text-sm text-ink-muted">Up to 280 characters.</p>
-    {#if form?.errors?.bio}<p id="bio-error" class="mt-1 text-sm text-red-400">{form.errors.bio}</p>{/if}
+    {#if form?.errors?.bio}<p id="bio-error" class="mt-1 text-sm text-danger-fg">{form.errors.bio}</p>{/if}
   </div>
 
   <div>
@@ -67,19 +67,19 @@
     <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" value={form?.values?.phone ?? p.phone} class={input} />
   </div>
 
-  <button type="submit" class="min-h-[44px] rounded-md bg-accent px-8 py-2 font-semibold text-accent-ink">Save profile</button>
+  <button type="submit" class="btn btn-primary px-8">Save profile</button>
 </form>
 
 <div class="mt-10 border-t border-border pt-6">
   <h2 class="mb-3 font-condensed text-xl font-semibold">Your data</h2>
-  <a href="/export" class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
+  <a href="/export" class="btn btn-secondary">
     <Download size={18} aria-hidden="true" /> Export all data (CSV)
   </a>
 </div>
 
 <div class="mt-10 border-t border-border pt-6">
   <form method="POST" action="/logout">
-    <button type="submit" class="inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium text-ink-muted">
+    <button type="submit" class="btn btn-secondary text-ink-muted">
       <LogOut size={18} aria-hidden="true" /> Log out
     </button>
   </form>

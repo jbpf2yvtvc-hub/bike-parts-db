@@ -167,7 +167,7 @@
         More than one can go on the same bike.
       </p>
       {#if errors.bikes}
-        <p class="mt-1 text-sm text-red-400">{errors.bikes}</p>
+        <p class="mt-1 text-sm text-danger-fg">{errors.bikes}</p>
       {/if}
       {#if bikes.length}
         <div class="mt-2 space-y-1">
@@ -215,7 +215,7 @@
   </fieldset>
 
   <div class="pt-4">
-    <button type="submit" class="min-h-[44px] w-full rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink sm:w-auto sm:px-8">
+    <button type="submit" class="btn btn-primary w-full sm:w-auto sm:px-8">
       {submitLabel}
     </button>
   </div>

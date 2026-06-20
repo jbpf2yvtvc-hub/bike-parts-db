@@ -81,17 +81,10 @@
         {/if}
 
         <div class="flex justify-end gap-3">
-        <button
-          type="button"
-          onclick={() => open.set(false)}
-          class="min-h-[44px] rounded-md border border-border px-4 py-2 text-ink"
-        >
+        <button type="button" onclick={() => open.set(false)} class="btn btn-secondary">
           Cancel
         </button>
-        <button
-          type="submit"
-          class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
-        >
+        <button type="submit" class="btn btn-primary">
           <ArrowLeftRight size={16} aria-hidden="true" />
           Switch
         </button>

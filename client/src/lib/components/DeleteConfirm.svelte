@@ -33,7 +33,7 @@
     e.preventDefault();
     open.set(true);
   }}
-  class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-red-500/50 px-4 py-2 font-medium text-red-400 hover:bg-red-500/10"
+  class="btn btn-danger-outline"
 >
   <Trash2 size={18} aria-hidden="true" />
   {label}
@@ -53,17 +53,10 @@
       <p use:melt={$description} class="mt-2 text-ink-muted">{message}</p>
 
       <form method="POST" {action} use:enhance class="mt-6 flex justify-end gap-3">
-        <button
-          type="button"
-          onclick={() => open.set(false)}
-          class="min-h-[44px] rounded-md border border-border px-4 py-2 text-ink"
-        >
+        <button type="button" onclick={() => open.set(false)} class="btn btn-secondary">
           Cancel
         </button>
-        <button
-          type="submit"
-          class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-500"
-        >
+        <button type="submit" class="btn btn-danger">
           <Trash2 size={18} aria-hidden="true" />
           {label}
         </button>

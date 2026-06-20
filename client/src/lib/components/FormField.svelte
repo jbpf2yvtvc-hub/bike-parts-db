@@ -21,7 +21,7 @@
   const baseInput =
     'mt-1 block w-full min-h-[44px] rounded-md border bg-surface-2 px-3 py-2 text-ink ' +
     'placeholder:text-ink-muted focus-visible:border-accent';
-  const borderCls = $derived(error ? 'border-red-500' : 'border-border');
+  const borderCls = $derived(error ? 'border-danger-fg' : 'border-border');
 
   const strValue = $derived(value == null ? '' : String(value));
   const arrValue = $derived(Array.isArray(value) ? (value as string[]) : []);
@@ -40,11 +40,11 @@
         aria-describedby={describedBy}
         class="h-5 w-5 rounded border-border bg-surface-2"
       />
-      <span class="font-medium">{field.label}{#if field.required}<span class="text-red-400"> *</span>{/if}</span>
+      <span class="font-medium">{field.label}{#if field.required}<span class="text-danger-fg"> *</span>{/if}</span>
     </label>
   {:else}
     <label for={inputId} class="block font-medium text-ink">
-      {field.label}{#if field.required}<span class="text-red-400"> *</span>{/if}
+      {field.label}{#if field.required}<span class="text-danger-fg"> *</span>{/if}
     </label>
 
     {#if field.type === 'textarea'}
@@ -109,6 +109,6 @@
   {/if}
   {#if error}
     <!-- Error in text, in a static position below the field (§3, §4). -->
-    <p id={errorId} class="mt-1 text-sm text-red-400">{error}</p>
+    <p id={errorId} class="mt-1 text-sm text-danger-fg">{error}</p>
   {/if}
 </div>

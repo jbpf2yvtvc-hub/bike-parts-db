@@ -11,7 +11,7 @@
 <h2 class="mb-4 text-xl font-semibold">Create your account</h2>
 
 {#if form?.error}
-  <p role="alert" class="mb-4 rounded-md border border-red-500/50 bg-red-500/10 p-3 text-red-300">
+  <p role="alert" class="mb-4 rounded-md border border-danger-fg/50 bg-danger-fg/10 p-3 text-danger-fg">
     {form.error}
   </p>
 {/if}
@@ -23,7 +23,7 @@
       aria-describedby="username-hint username-error"
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
     <p id="username-hint" class="mt-1 text-sm text-ink-muted">Cannot be changed later.</p>
-    {#if e.username}<p id="username-error" class="mt-1 text-sm text-red-400">{e.username[0]}</p>{/if}
+    {#if e.username}<p id="username-error" class="mt-1 text-sm text-danger-fg">{e.username[0]}</p>{/if}
   </div>
   <div>
     <label for="display_name" class="block font-medium">Display name</label>
@@ -35,23 +35,23 @@
     <input id="email" name="email" type="email" autocomplete="email" required value={v.email ?? ''}
       aria-describedby="email-error"
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
-    {#if e.email}<p id="email-error" class="mt-1 text-sm text-red-400">{e.email[0]}</p>{/if}
+    {#if e.email}<p id="email-error" class="mt-1 text-sm text-danger-fg">{e.email[0]}</p>{/if}
   </div>
   <div>
     <label for="password" class="block font-medium">Password</label>
     <input id="password" name="password" type="password" autocomplete="new-password" required
       aria-describedby="password-error"
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
-    {#if e.password}<p id="password-error" class="mt-1 text-sm text-red-400">{e.password[0]}</p>{/if}
+    {#if e.password}<p id="password-error" class="mt-1 text-sm text-danger-fg">{e.password[0]}</p>{/if}
   </div>
   <div>
     <label for="passwordConfirm" class="block font-medium">Confirm password</label>
     <input id="passwordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" required
       aria-describedby="passwordConfirm-error"
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
-    {#if e.passwordConfirm}<p id="passwordConfirm-error" class="mt-1 text-sm text-red-400">{e.passwordConfirm[0]}</p>{/if}
+    {#if e.passwordConfirm}<p id="passwordConfirm-error" class="mt-1 text-sm text-danger-fg">{e.passwordConfirm[0]}</p>{/if}
   </div>
-  <button type="submit" class="min-h-[44px] w-full rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
+  <button type="submit" class="btn btn-primary w-full">
     Create account
   </button>
 </form>

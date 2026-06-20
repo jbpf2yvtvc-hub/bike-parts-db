@@ -9,7 +9,7 @@
 <h2 class="mb-4 text-xl font-semibold">Log in</h2>
 
 {#if form?.error}
-  <p role="alert" class="mb-4 rounded-md border border-red-500/50 bg-red-500/10 p-3 text-red-300">
+  <p role="alert" class="mb-4 rounded-md border border-danger-fg/50 bg-danger-fg/10 p-3 text-danger-fg">
     {form.error}
   </p>
 {/if}
@@ -41,7 +41,7 @@
   </div>
   <button
     type="submit"
-    class="min-h-[44px] w-full rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink"
+    class="btn btn-primary w-full"
   >
     Log in
   </button>

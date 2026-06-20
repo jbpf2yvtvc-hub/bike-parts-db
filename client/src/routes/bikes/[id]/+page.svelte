@@ -13,7 +13,7 @@
 
 <div class="mb-2 flex items-start justify-between gap-3">
   <div>
-    <h1 class="font-condensed text-2xl font-bold">{bike.name}</h1>
+    <h1 class="font-condensed text-2xl font-bold heading-cased">{bike.name}</h1>
     {#if subtitle}<p class="text-ink-muted">{subtitle}</p>{/if}
   </div>
   {#if bike.is_active}
@@ -27,10 +27,10 @@
 {#if bike.notes}<p class="mt-2 whitespace-pre-line">{bike.notes}</p>{/if}
 
 <div class="mt-6 flex flex-wrap gap-3">
-  <a href={`/bikes/${bike.id}/checklist`} class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
+  <a href={`/bikes/${bike.id}/checklist`} class="btn btn-primary">
     <ListChecks size={18} aria-hidden="true" /> Build checklist
   </a>
-  <a href={`/bikes/${bike.id}/edit`} class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
+  <a href={`/bikes/${bike.id}/edit`} class="btn btn-secondary">
     <Pencil size={18} aria-hidden="true" /> Edit
   </a>
   <DeleteConfirm

@@ -16,9 +16,9 @@
 
 <form method="POST" use:enhance class="space-y-4">
   <div>
-    <label for="name" class="block font-medium">Name <span class="text-red-400">*</span></label>
+    <label for="name" class="block font-medium">Name <span class="text-danger-fg">*</span></label>
     <input id="name" name="name" required value={values.name ?? ''} aria-describedby="name-error" class={input} />
-    {#if errors.name}<p id="name-error" class="mt-1 text-sm text-red-400">{errors.name}</p>{/if}
+    {#if errors.name}<p id="name-error" class="mt-1 text-sm text-danger-fg">{errors.name}</p>{/if}
   </div>
   <div class="grid grid-cols-2 gap-4">
     <div>
@@ -50,7 +50,7 @@
   </label>
 
   <div class="pt-2">
-    <button type="submit" class="min-h-[44px] w-full rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink sm:w-auto sm:px-8">
+    <button type="submit" class="btn btn-primary w-full sm:w-auto sm:px-8">
       {submitLabel}
     </button>
   </div>

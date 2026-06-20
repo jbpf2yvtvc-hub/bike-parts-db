@@ -26,7 +26,7 @@
 <div class="mb-4 flex items-start justify-between gap-3">
   <div>
     <p class="text-xs uppercase tracking-wide text-ink-muted">{getLabel(part.type_id)}</p>
-    <h1 class="font-condensed text-2xl font-bold">
+    <h1 class="font-condensed text-2xl font-bold heading-cased">
       {title}{#if (part.quantity ?? 1) > 1}<span class="ml-2 text-lg font-normal text-ink-muted">×{part.quantity}</span>{/if}
     </h1>
   </div>
@@ -78,7 +78,7 @@
 </div>
 
 <div class="mt-6 flex flex-wrap gap-3">
-  <a href={`/parts/${part.id}/edit`} class="btn inline-flex min-h-[44px] items-center gap-2 rounded-md border border-border px-4 py-2 font-medium">
+  <a href={`/parts/${part.id}/edit`} class="btn btn-secondary">
     <Pencil size={18} aria-hidden="true" /> Edit
   </a>
   <DeleteConfirm

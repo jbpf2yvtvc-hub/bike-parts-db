@@ -154,7 +154,7 @@
       <p class="text-xs uppercase tracking-wide text-ink-muted">
         {getLabel(part.type_id)}{#if distinguisher} · {distinguisher}{/if}
       </p>
-      <h3 class="font-condensed text-lg font-semibold text-ink">
+      <h3 class="font-condensed text-lg font-semibold text-ink heading-cased">
         {title}{#if qty > 1}<span class="ml-1 text-sm font-normal text-ink-muted">×{qty}</span>{/if}
       </h3>
     </div>

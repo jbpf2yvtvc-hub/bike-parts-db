@@ -15,11 +15,21 @@
   --color-ink: #f5f5f5;
   --color-ink-muted: #c2c2c2; /* >= 4.5:1 on ground/surface */
 
-  /* Disposition colors — always paired with icon + text, never color alone */
+  /* Disposition colors — always paired with icon + text, never color alone.
+     for-sale is amber (distinct from the brand yellow accent); unknown is a
+     hued slate (distinct from ink-muted) so each status has its own identity. */
   --color-keep: #4ade80;
-  --color-for-sale: #f5c800;
+  --color-for-sale: #f59e0b;
   --color-donate: #60a5fa;
-  --color-unknown: #c2c2c2;
+  --color-unknown: #94a3b8;
+
+  /* Danger / destructive — one semantic source for errors and destructive UI.
+     danger      = fill for destructive buttons (white text passes AA on it)
+     danger-ink  = text/icon on a danger fill
+     danger-fg   = danger expressed as text/icon/border on dark surfaces */
+  --color-danger: #dc2626;
+  --color-danger-ink: #ffffff;
+  --color-danger-fg: #f87171;
 
   /* Headings use Montserrat — a free, geometric face close to Proxima Nova.
      Both heading vars resolve to it for a consistent display voice. */
@@ -62,6 +72,14 @@ h6 {
   letter-spacing: 0.03em;
 }
 
+/* Opt-out for headings that carry long, user-generated strings (part/bike
+   names): keep the display face but drop all-caps + tracking for legibility.
+   Chrome/section headers stay uppercase. */
+.heading-cased {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 /* Native <details> disclosure: hide default markers (we supply a chevron) and
    rotate the chevron when the section is open. */
 summary {
@@ -101,6 +119,37 @@ button:not(:disabled):focus-visible,
 .btn:hover,
 .btn:focus-visible {
   filter: brightness(1.12);
+}
+
+/* ---------------------------------------------------------------------------
+   Button variants — one source for the action recipe (44px target, layout,
+   radius) and the three intents. The hover/focus brightness above applies to
+   every <button> and .btn automatically, so variants only set appearance.
+   Usage: <button class="btn btn-primary"> or <a class="btn btn-primary">.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-danger-outline {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md px-4 py-2 font-medium;
+  }
+  .btn-primary {
+    @apply bg-accent font-semibold text-accent-ink;
+  }
+  .btn-secondary {
+    @apply border border-border bg-transparent text-ink;
+  }
+  .btn-danger {
+    @apply bg-danger text-danger-ink;
+  }
+  .btn-danger-outline {
+    @apply border border-danger-fg/50 bg-transparent text-danger-fg;
+  }
+}
+.btn-danger-outline:hover,
+.btn-danger-outline:focus-visible {
+  background: color-mix(in srgb, var(--color-danger-fg) 10%, transparent);
 }
 
 /* Visible, non-removed focus everywhere (SC 2.4.7). Never outline:none. */

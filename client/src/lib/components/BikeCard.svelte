@@ -15,7 +15,7 @@
 >
   <div class="flex items-start justify-between gap-2">
     <div>
-      <h3 class="font-condensed text-lg font-semibold text-ink">{bike.name}</h3>
+      <h3 class="font-condensed text-lg font-semibold text-ink heading-cased">{bike.name}</h3>
       {#if subtitle}<p class="text-sm text-ink-muted">{subtitle}</p>{/if}
     </div>
     {#if bike.is_active}

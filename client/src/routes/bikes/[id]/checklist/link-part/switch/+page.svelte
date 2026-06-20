@@ -39,8 +39,8 @@
     {/if}
 
     <div class="flex justify-end gap-3">
-      <a href={backHref} class="btn min-h-[44px] rounded-md border border-border px-4 py-2 font-medium">Cancel</a>
-      <button type="submit" class="inline-flex min-h-[44px] items-center gap-2 rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
+      <a href={backHref} class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-primary">
         <ArrowLeftRight size={18} aria-hidden="true" /> Switch
       </button>
     </div>

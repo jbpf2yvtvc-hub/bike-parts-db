@@ -235,7 +235,7 @@
         {/if}
       </div>
       {#if !mounted}
-        <button type="submit" class="mt-3 min-h-[44px] rounded-md border border-border px-4 py-2 text-sm">
+        <button type="submit" class="btn btn-secondary mt-3 text-sm">
           Update configuration
         </button>
       {/if}
@@ -448,7 +448,7 @@
   {/if}
 
   {#if !mounted}
-    <button type="submit" class="min-h-[44px] rounded-md bg-accent px-8 py-2 font-semibold text-accent-ink">
+    <button type="submit" class="btn btn-primary px-8">
       <Check size={18} class="mr-1 inline" aria-hidden="true" /> Save progress
     </button>
   {/if}
@@ -480,7 +480,7 @@
     {#if mounted}
       <p class="mt-2 text-xs text-ink-muted">Saved automatically.</p>
     {:else}
-      <button type="submit" class="mt-3 min-h-[44px] rounded-md bg-accent px-8 py-2 font-semibold text-accent-ink">
+      <button type="submit" class="mt-3 btn btn-primary px-8">
         <Check size={18} class="mr-1 inline" aria-hidden="true" /> Save notes
       </button>
     {/if}
