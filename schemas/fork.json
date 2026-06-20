@@ -41,6 +41,7 @@
     },
     { "id": "travel_mm", "label": "Suspension travel (mm)", "type": "number", "inputmode": "numeric", "hint": "0 for rigid" },
     { "id": "material", "label": "Material", "type": "select", "options": ["steel", "aluminum", "carbon", "other"] },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

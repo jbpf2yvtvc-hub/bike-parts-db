@@ -19,6 +19,7 @@
       "options": ["square taper", "ISIS", "Hollowtech II / 24mm", "external cup"]
     },
     { "id": "included_bb", "label": "Includes bottom bracket", "type": "boolean" },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

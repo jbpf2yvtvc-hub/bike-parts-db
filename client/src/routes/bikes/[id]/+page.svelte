@@ -23,7 +23,7 @@
   {/if}
 </div>
 
-{#if bike.color}<p class="text-ink-muted">Colour: {bike.color}</p>{/if}
+{#if bike.color}<p class="text-ink-muted">Color: {bike.color}</p>{/if}
 {#if bike.notes}<p class="mt-2 whitespace-pre-line">{bike.notes}</p>{/if}
 
 <div class="mt-6 flex flex-wrap gap-3">

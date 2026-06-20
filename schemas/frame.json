@@ -12,7 +12,7 @@
       "options": ["steel", "aluminum", "titanium", "carbon", "other"]
     },
     { "id": "size", "label": "Size", "type": "text", "searchable": true, "hint": "e.g. 54cm, M, L" },
-    { "id": "color", "label": "Colour", "type": "text", "searchable": true },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     {
       "id": "wheel_size",
       "label": "Wheel size",

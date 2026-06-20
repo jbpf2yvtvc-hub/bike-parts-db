@@ -21,6 +21,7 @@
       "options": ["4", "5"]
     },
     { "id": "bcd_mm", "label": "BCD provided (mm)", "type": "number", "inputmode": "decimal", "searchable": true, "hint": "Bolt circle diameter this spider presents to the chainrings" },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

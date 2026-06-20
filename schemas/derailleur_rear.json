@@ -18,6 +18,7 @@
     { "id": "total_capacity", "label": "Total capacity (teeth)", "type": "number", "inputmode": "numeric" },
     { "id": "cage_length", "label": "Cage length", "type": "select", "options": ["short", "medium", "long"] },
     { "id": "mount", "label": "Mount", "type": "select", "options": ["standard hanger", "direct mount"] },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

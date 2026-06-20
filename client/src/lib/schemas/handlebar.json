@@ -20,6 +20,7 @@
       "options": ["25.4mm", "26.0mm", "31.8mm", "35.0mm"]
     },
     { "id": "material", "label": "Material", "type": "select", "options": ["aluminum", "steel", "carbon", "titanium"] },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

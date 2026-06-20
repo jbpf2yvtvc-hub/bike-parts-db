@@ -27,6 +27,7 @@
       "options": ["canti/V-brake boss", "center-pull boss", "post mount (disc)", "IS mount (disc)", "flat mount (disc)", "road caliper bolt"]
     },
     { "id": "position", "label": "Position", "type": "select", "options": ["front", "rear", "either"] },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

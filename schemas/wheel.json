@@ -71,6 +71,7 @@
     { "id": "spokes", "label": "Spokes", "type": "text", "searchable": true },
     { "id": "nipples", "label": "Nipples", "type": "text", "searchable": true },
     { "id": "rims", "label": "Rims", "type": "text", "searchable": true },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

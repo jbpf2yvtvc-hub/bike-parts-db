@@ -31,6 +31,7 @@
       "type": "select",
       "options": ["square taper", "Octalink", "ISIS", "Hollowtech II / 24mm", "GXP", "DUB", "30mm"]
     },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

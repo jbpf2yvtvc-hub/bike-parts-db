@@ -29,6 +29,7 @@
       ]
     },
     { "id": "range", "label": "Range", "type": "text", "searchable": true, "hint": "e.g. 11-32, 10-51" },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

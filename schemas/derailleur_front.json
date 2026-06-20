@@ -19,6 +19,7 @@
       "options": ["2", "3"]
     },
     { "id": "max_tooth", "label": "Max chainring teeth", "type": "number", "inputmode": "numeric" },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

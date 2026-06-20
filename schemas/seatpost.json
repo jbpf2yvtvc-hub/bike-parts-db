@@ -9,6 +9,7 @@
     { "id": "setback_mm", "label": "Setback (mm)", "type": "number", "inputmode": "numeric" },
     { "id": "dropper", "label": "Dropper post", "type": "boolean" },
     { "id": "material", "label": "Material", "type": "select", "options": ["aluminum", "steel", "carbon", "titanium"] },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

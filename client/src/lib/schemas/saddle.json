@@ -12,7 +12,7 @@
       "type": "select",
       "options": ["steel", "chromoly", "titanium", "carbon", "alloy"]
     },
-    { "id": "color", "label": "Colour", "type": "text", "searchable": true },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

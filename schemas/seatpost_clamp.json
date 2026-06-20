@@ -6,7 +6,7 @@
     { "id": "model", "label": "Model", "type": "text", "searchable": true, "autocomplete": "off" },
     { "id": "diameter_mm", "label": "Diameter (mm)", "type": "number", "inputmode": "decimal", "required": true, "hint": "Frame seat-tube outer diameter" },
     { "id": "closure", "label": "Closure", "type": "select", "options": ["quick-release", "bolt"] },
-    { "id": "color", "label": "Colour", "type": "text", "searchable": true },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

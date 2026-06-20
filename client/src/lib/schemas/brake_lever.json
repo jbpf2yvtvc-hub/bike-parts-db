@@ -23,6 +23,7 @@
     },
     { "id": "hand", "label": "Hand", "type": "select", "options": ["left", "right", "pair"] },
     { "id": "hydraulic", "label": "Hydraulic", "type": "boolean" },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

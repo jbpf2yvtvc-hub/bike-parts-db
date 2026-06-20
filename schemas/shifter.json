@@ -33,6 +33,7 @@
       "type": "select",
       "options": ["flat bar clamp", "drop bar", "downtube boss", "bar-end"]
     },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }

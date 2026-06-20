@@ -4,7 +4,7 @@
 
   let { disposition }: { disposition: Disposition } = $props();
 
-  // Meaning conveyed by icon + text + colour, never colour alone (§3).
+  // Meaning conveyed by icon + text + color, never color alone (§3).
   const META: Record<Disposition, { label: string; icon: any; cls: string }> = {
     keep: { label: 'Keep', icon: CircleCheck, cls: 'text-keep border-keep/40' },
     for_sale: { label: 'For sale', icon: Tag, cls: 'text-for-sale border-for-sale/40' },

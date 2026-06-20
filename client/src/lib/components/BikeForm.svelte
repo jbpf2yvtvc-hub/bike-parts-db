@@ -36,7 +36,7 @@
       <input id="year" name="year" type="number" inputmode="numeric" value={values.year ?? ''} class={input} />
     </div>
     <div>
-      <label for="color" class="block font-medium">Colour</label>
+      <label for="color" class="block font-medium">Color</label>
       <input id="color" name="color" value={values.color ?? ''} class={input} />
     </div>
   </div>

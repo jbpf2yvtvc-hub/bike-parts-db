@@ -19,6 +19,7 @@
       "searchable": true,
       "options": ["freewheel thread (ISO/BSA)", "fixed track thread", "cassette spline + spacers"]
     },
+    { "id": "color", "label": "Color", "type": "text", "searchable": true },
     { "id": "notes", "label": "Notes", "type": "textarea", "searchable": true }
   ]
 }
