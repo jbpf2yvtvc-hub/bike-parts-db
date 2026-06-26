@@ -252,7 +252,7 @@ Baseline GET form to `/search?q=`; PocketBase filter `parts?filter=(owner='UID' 
 
 ### 6.3 CSV export
 
-`/export/+server.ts` (GET) fetches the user's parts and bikes, flattens `attributes` JSON to columns via `papaparse` server-side, and streams two CSVs in a zip with `Content-Disposition: attachment`.
+`/export/+server.ts` (GET) fetches the user's parts and bikes, flattens `attributes` JSON to columns, and streams two CSVs in a zip with `Content-Disposition: attachment`. The CSV and zip are generated server-side without third-party libraries: a built-in RFC-4180 serializer in `$lib/export.ts` writes the CSVs (header is the union of all row keys, so variable `attr.*` columns are covered), and a minimal STORE-method zip writer (with per-file CRC-32) bundles them.
 
 ### 6.4 Delete protection
 
