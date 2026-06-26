@@ -9,7 +9,7 @@ import {
 } from '$lib/server/checklist';
 import { unitsOnBike, totalUnitsAssigned } from '$lib/server/parts';
 import { findItem, getTitle } from '$lib/checklist-data';
-import { getLabel } from '$lib/schema-utils';
+import { partTitle } from '$lib/schema-utils';
 import {
   getCompatibilityFilter,
   getTypeIdForItem,
@@ -21,9 +21,7 @@ import {
 import type { PartRecord } from '$lib/types';
 
 function summarize(part: any, bikeId: string) {
-  const title =
-    [part.attributes?.brand, part.attributes?.model].filter(Boolean).join(' ') ||
-    getLabel(part.type_id);
+  const title = partTitle(part);
   // Show a few key attributes for the picker.
   const keyAttrs = Object.entries(part.attributes ?? {})
     .filter(([k, v]) => v != null && v !== '' && k !== 'brand' && k !== 'model' && k !== 'notes')

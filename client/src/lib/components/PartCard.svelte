@@ -1,15 +1,12 @@
 <script lang="ts">
   import DispositionBadge from './DispositionBadge.svelte';
-  import { getLabel } from '$lib/schema-utils';
+  import { getLabel, partTitle } from '$lib/schema-utils';
   import { MapPin } from '@lucide/svelte';
   import type { PartRecord } from '$lib/types';
 
   let { part }: { part: PartRecord } = $props();
 
-  const title = $derived(
-    [part.attributes?.brand, part.attributes?.model].filter(Boolean).join(' ') ||
-      getLabel(part.type_id)
-  );
+  const title = $derived(partTitle(part));
   const qty = $derived(part.quantity ?? 1);
   const bikeNames = $derived((part.expand?.bikes ?? []).map((b) => b.name));
   // A short distinguisher in the type line so otherwise-identical parts are

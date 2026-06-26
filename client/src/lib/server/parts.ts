@@ -4,9 +4,14 @@ import {
   schemaToZod,
   buildTags,
   readAttributes,
-  getLabel,
+  partTitle,
   type PartSchema
 } from '$lib/schema-utils';
+
+// Re-exported so existing `$lib/server/parts` importers keep working; the
+// canonical definition lives in the non-server module so .svelte components
+// (which can't import from $lib/server) can share it too.
+export { partTitle };
 import {
   rolesForType,
   normalizeAssociations,
@@ -27,13 +32,6 @@ export interface PartMeta {
   acquisition_date: string;
   acquisition_price: number | null;
   asking_price: number | null;
-}
-
-/** Display title for a part record (brand + model, else the type label). */
-export function partTitle(p: { attributes?: Record<string, unknown>; type_id: string }): string {
-  return (
-    [p.attributes?.brand, p.attributes?.model].filter(Boolean).join(' ') || getLabel(p.type_id)
-  );
 }
 
 export interface AssociationOption extends AssociationRole {

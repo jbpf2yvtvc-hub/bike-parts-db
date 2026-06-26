@@ -7,7 +7,7 @@ import {
   buildChecklistContext,
   removePartFromBikeLinks
 } from '$lib/server/checklist';
-import { getLabel } from '$lib/schema-utils';
+import { partTitle } from '$lib/schema-utils';
 import { matchItemsForPart, exclusiveGroupOf } from '$lib/checklist-compatibility';
 import { unitsOnBike } from '$lib/server/parts';
 import type { PartRecord } from '$lib/types';
@@ -31,8 +31,7 @@ function summarizeLink(p: any, thisBikeId: string, source: 'bike' | 'manual'): L
   return {
     id: p.id,
     type_id: p.type_id,
-    title:
-      [p.attributes?.brand, p.attributes?.model].filter(Boolean).join(' ') || getLabel(p.type_id),
+    title: partTitle(p),
     quantity: p.quantity ?? 1,
     onThisBike: bikeIds.includes(thisBikeId),
     otherBikeNames: expanded.filter((b) => b.id !== thisBikeId).map((b) => b.name),
