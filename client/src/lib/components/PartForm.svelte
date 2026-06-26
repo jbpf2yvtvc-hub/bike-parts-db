@@ -2,7 +2,9 @@
   import { enhance } from '$app/forms';
   import { onMount, untrack } from 'svelte';
   import FormField from './FormField.svelte';
+  import DispositionBadge from './DispositionBadge.svelte';
   import { DISPOSITIONS } from '$lib/types';
+  import type { Disposition } from '$lib/types';
   import type { FieldDef, PartSchema } from '$lib/schema-utils';
 
   interface AssocOption {
@@ -79,6 +81,9 @@
   onMount(() => (mounted = true));
   const liveValues = $state<Record<string, unknown>>(untrack(() => ({ ...attributes })));
 
+  // Mirror the selected disposition so its status pill updates live.
+  let disposition = $state<Disposition>(untrack(() => (meta.disposition ?? 'unknown') as Disposition));
+
   function onFieldInput(e: Event) {
     const el = e.target as HTMLInputElement | HTMLSelectElement | null;
     if (el?.name?.startsWith('attr.')) liveValues[el.name.slice('attr.'.length)] = el.value;
@@ -145,10 +150,13 @@
     <legend class="font-condensed text-lg font-semibold">Inventory details</legend>
 
     <div>
-      <label for="disposition" class="block font-medium">Disposition</label>
-      <select id="disposition" name="disposition" class={input}>
+      <div class="flex items-center gap-2">
+        <label for="disposition" class="block font-medium">Disposition</label>
+        <DispositionBadge {disposition} />
+      </div>
+      <select id="disposition" name="disposition" bind:value={disposition} class={input}>
         {#each DISPOSITIONS as d (d.value)}
-          <option value={d.value} selected={(meta.disposition ?? 'unknown') === d.value}>{d.label}</option>
+          <option value={d.value}>{d.label}</option>
         {/each}
       </select>
     </div>
