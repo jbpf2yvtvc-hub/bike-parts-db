@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
 import { findItem } from '$lib/checklist-data';
-import { getLabel } from '$lib/schema-utils';
+import { partTitle } from '$lib/schema-utils';
 
 // No-JS confirmation page for switching a fully-assigned part onto this bike.
 // The confirm form posts to the link-part `?/linkPart` action with confirm=1.
@@ -30,9 +30,6 @@ export const load: PageServerLoad = async (event) => {
     throw error(404, 'Part not found');
   }
 
-  const partTitle =
-    [part.attributes?.brand, part.attributes?.model].filter(Boolean).join(' ') ||
-    getLabel(part.type_id);
   const otherBikes: { id: string; name: string }[] = (part.expand?.bikes ?? [])
     .filter((b: any) => b.id !== bikeId)
     .map((b: any) => ({ id: b.id, name: b.name }));
@@ -42,7 +39,7 @@ export const load: PageServerLoad = async (event) => {
     bikeName: bike.name,
     item,
     partId,
-    partTitle,
+    partTitle: partTitle(part),
     otherBikes
   };
 };

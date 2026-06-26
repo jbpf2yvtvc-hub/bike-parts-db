@@ -1,8 +1,8 @@
 /**
  * Schema engine (§6.1).
  *
- * Part-type schemas are JSON files in src/lib/schemas (generated from the
- * canonical /schemas via `npm run sync:schemas`). They drive:
+ * Part-type schemas are the JSON files in the repo-root /schemas directory
+ * (the single source of truth), globbed directly at build time. They drive:
  *   - server-side form rendering (field config)
  *   - Zod validation
  *   - the search `tags` index (searchable fields)
@@ -43,8 +43,9 @@ export interface PartSchema {
   fields: FieldDef[];
 }
 
-// Eagerly import every part-type schema at build time.
-const modules = import.meta.glob<{ default: PartSchema }>('./schemas/*.json', {
+// Eagerly import every part-type schema at build time, straight from the
+// canonical repo-root /schemas directory (../../../schemas from here).
+const modules = import.meta.glob<{ default: PartSchema }>('../../../schemas/*.json', {
   eager: true
 });
 
@@ -65,6 +66,13 @@ export function getSchema(typeId: string): PartSchema | undefined {
 
 export function getLabel(typeId: string): string {
   return schemas[typeId]?.label ?? typeId;
+}
+
+/** Display title for a part record (brand + model, else the type label). */
+export function partTitle(p: { attributes?: Record<string, unknown>; type_id: string }): string {
+  return (
+    [p.attributes?.brand, p.attributes?.model].filter(Boolean).join(' ') || getLabel(p.type_id)
+  );
 }
 
 /** Build a Zod schema for the `attributes` of a given part type. */

@@ -48,13 +48,13 @@ bike-parts-db/
 ├── client/              # SvelteKit app (the website)
 ├── server/              # PocketBase: Dockerfile + committed JS migrations
 ├── schemas/             # canonical part-type JSON (source of truth)
-├── scripts/             # run-pb.sh, sync-schemas.mjs
+├── scripts/             # run-pb.sh
 └── docs/                # technical design
 ```
 
-`schemas/` is canonical. `npm run sync:schemas` copies them into
-`client/src/lib/schemas/` (which the app imports at build); this runs
-automatically as part of `npm run build`.
+`schemas/` is the single source of truth. The client imports the JSON files
+directly from it at build time (via an `import.meta.glob` of `../../../schemas`
+in `client/src/lib/schema-utils.ts`) — there is no generated copy to sync.
 
 ---
 
@@ -68,7 +68,7 @@ automatically as part of `npm run build`.
 Two processes: PocketBase (`:8090`) and SvelteKit (`:5173`).
 
 ```bash
-# 1. Install + sync schemas
+# 1. Install dependencies
 npm run setup
 
 # 2. Configure env
@@ -97,11 +97,10 @@ server/pocketbase superuser upsert you@example.com yourpassword
 |---|---|
 | `npm run dev` | SvelteKit dev server |
 | `npm run pb` | Download + run PocketBase locally with automigrate |
-| `npm run build` | Sync schemas + production build (Cloudflare adapter) |
+| `npm run build` | Production build (Cloudflare adapter) |
 | `npm run check` | `svelte-check` type/diagnostics |
 | `npm run lint` | ESLint (Svelte a11y rules as errors) |
 | `npm run test:a11y` | axe-core via Playwright |
-| `npm run sync:schemas` | Copy `schemas/*.json` into the client |
 
 ---
 
@@ -154,9 +153,8 @@ environment variables (no `VITE_` prefix).
    `text`, `textarea`, `number`, `select`, `multiselect`, `boolean`, `date`,
    `relation`; each field may set `searchable`, `required`, `hint`, `inputmode`,
    `autocomplete`, `options`).
-2. `npm run sync:schemas` (or just `npm run build`).
-3. Redeploy. No backend change is needed — forms, validation, search, and the
-   checklist pickers all read the schema.
+2. Redeploy. No backend change is needed — the client globs `schemas/` directly,
+   so forms, validation, search, and the checklist pickers all read the schema.
 
 > ⚠️ If the part type is used by the Build Checklist, its attribute **field ids
 > and option strings must match** the filters in

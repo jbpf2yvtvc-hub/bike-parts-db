@@ -33,8 +33,7 @@ export default ts.config(
       'build/',
       '.svelte-kit/',
       'dist/',
-      'node_modules/',
-      'src/lib/schemas/'
+      'node_modules/'
     ]
   }
 );

@@ -1,15 +1,12 @@
 <script lang="ts">
   import DispositionBadge from '$lib/components/DispositionBadge.svelte';
   import DeleteConfirm from '$lib/components/DeleteConfirm.svelte';
-  import { getLabel } from '$lib/schema-utils';
+  import { getLabel, partTitle } from '$lib/schema-utils';
   import { Pencil, MapPin } from '@lucide/svelte';
   let { data } = $props();
 
   const part = $derived(data.part);
-  const title = $derived(
-    [part.attributes?.brand, part.attributes?.model].filter(Boolean).join(' ') ||
-      getLabel(part.type_id)
-  );
+  const title = $derived(partTitle(part as any));
 
   function display(value: unknown): string {
     if (value == null || value === '') return '—';

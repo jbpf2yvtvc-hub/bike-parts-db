@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/auth';
-import { getLabel } from '$lib/schema-utils';
+import { partTitle } from '$lib/schema-utils';
 
 export const load: PageServerLoad = async (event) => {
   requireUser(event);
@@ -11,9 +11,7 @@ export const load: PageServerLoad = async (event) => {
   } catch {
     throw error(404, 'Part not found');
   }
-  const title =
-    [part.attributes?.brand, part.attributes?.model].filter(Boolean).join(' ') ||
-    getLabel(part.type_id);
+  const title = partTitle(part as any);
   return { partId: part.id, title };
 };
 
