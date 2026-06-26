@@ -44,10 +44,6 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
 
-      - name: Sync canonical schemas into the client
-        if: steps.guard.outputs.ok == 'true'
-        run: node scripts/sync-schemas.mjs
-
       - name: Install
         if: steps.guard.outputs.ok == 'true'
         run: npm ci

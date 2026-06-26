@@ -20,9 +20,6 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
 
-      - name: Sync canonical schemas into the client
-        run: node scripts/sync-schemas.mjs
-
       - name: Install
         run: npm ci
         working-directory: client
