@@ -75,7 +75,7 @@
 </div>
 
 <div class="mt-6 flex flex-wrap gap-3">
-  <a href={`/parts/${part.id}/edit`} class="btn btn-secondary">
+  <a href={`/parts/${part.id}/edit`} class="btn btn-secondary" aria-keyshortcuts="e">
     <Pencil size={18} aria-hidden="true" /> Edit
   </a>
   <DeleteConfirm

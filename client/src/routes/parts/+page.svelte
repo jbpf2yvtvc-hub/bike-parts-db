@@ -9,7 +9,7 @@
 
 <div class="mb-4 flex items-center justify-between">
   <h1 class="font-display text-3xl tracking-wide text-accent">Parts</h1>
-  <a href="/parts/new" class="btn btn-primary">
+  <a href="/parts/new" class="btn btn-primary" aria-keyshortcuts="c p">
     <Plus size={18} aria-hidden="true" /> Add
   </a>
 </div>

@@ -19,6 +19,7 @@
             ? 'text-accent'
             : 'text-ink-muted'}"
           aria-current={active ? 'page' : undefined}
+          aria-keyshortcuts={item.keys}
         >
           <item.icon size={22} aria-hidden="true" />
           <span>{item.label}</span>
