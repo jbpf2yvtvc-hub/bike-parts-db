@@ -27,10 +27,10 @@
 {#if bike.notes}<p class="mt-2 whitespace-pre-line">{bike.notes}</p>{/if}
 
 <div class="mt-6 flex flex-wrap gap-3">
-  <a href={`/bikes/${bike.id}/checklist`} class="btn btn-primary">
+  <a href={`/bikes/${bike.id}/checklist`} class="btn btn-primary" aria-keyshortcuts="l">
     <ListChecks size={18} aria-hidden="true" /> Build checklist
   </a>
-  <a href={`/bikes/${bike.id}/edit`} class="btn btn-secondary">
+  <a href={`/bikes/${bike.id}/edit`} class="btn btn-secondary" aria-keyshortcuts="e">
     <Pencil size={18} aria-hidden="true" /> Edit
   </a>
   <DeleteConfirm

@@ -21,6 +21,7 @@
             ? 'bg-surface-2 text-accent'
             : 'text-ink-muted hover:text-ink'}"
           aria-current={active ? 'page' : undefined}
+          aria-keyshortcuts={item.keys}
         >
           <item.icon size={20} aria-hidden="true" />
           <span>{item.label}</span>

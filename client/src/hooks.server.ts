@@ -1,6 +1,24 @@
 import type { Handle } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { createPocketBase } from '$lib/server/pb';
 import { AUTH_COOKIE } from '$lib/server/auth';
+
+// Dev-only: suppress SvelteKit's "Avoid calling `fetch` eagerly during SSR"
+// warning. It's a false positive here — it comes from the PocketBase SDK's
+// server-side HTTP calls (in `load`/hooks) landing inside SvelteKit's dev
+// render-time `fetch` instrumentation. PocketBase is server-only, the calls are
+// correct, and the warning never fires in production. The filter matches only
+// this exact message so all other warnings pass through untouched.
+if (dev && !(globalThis as { __pbFetchWarnFiltered?: boolean }).__pbFetchWarnFiltered) {
+  (globalThis as { __pbFetchWarnFiltered?: boolean }).__pbFetchWarnFiltered = true;
+  const originalWarn = console.warn.bind(console);
+  console.warn = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('Avoid calling `fetch` eagerly during server-side rendering')) {
+      return;
+    }
+    originalWarn(...args);
+  };
+}
 
 /**
  * Per-request PocketBase instance. Rehydrates auth from the HttpOnly cookie,
