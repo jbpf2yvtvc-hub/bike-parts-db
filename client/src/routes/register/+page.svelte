@@ -20,7 +20,8 @@
   <div>
     <label for="username" class="block font-medium">Username</label>
     <input id="username" name="username" autocomplete="username" required value={v.username ?? ''}
-      aria-describedby="username-hint username-error"
+      aria-describedby={e.username ? 'username-hint username-error' : 'username-hint'}
+      aria-invalid={e.username ? 'true' : undefined}
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
     <p id="username-hint" class="mt-1 text-sm text-ink-muted">Cannot be changed later.</p>
     {#if e.username}<p id="username-error" class="mt-1 text-sm text-danger-fg">{e.username[0]}</p>{/if}
@@ -33,21 +34,24 @@
   <div>
     <label for="email" class="block font-medium">Email</label>
     <input id="email" name="email" type="email" autocomplete="email" required value={v.email ?? ''}
-      aria-describedby="email-error"
+      aria-describedby={e.email ? 'email-error' : undefined}
+      aria-invalid={e.email ? 'true' : undefined}
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
     {#if e.email}<p id="email-error" class="mt-1 text-sm text-danger-fg">{e.email[0]}</p>{/if}
   </div>
   <div>
     <label for="password" class="block font-medium">Password</label>
     <input id="password" name="password" type="password" autocomplete="new-password" required
-      aria-describedby="password-error"
+      aria-describedby={e.password ? 'password-error' : undefined}
+      aria-invalid={e.password ? 'true' : undefined}
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
     {#if e.password}<p id="password-error" class="mt-1 text-sm text-danger-fg">{e.password[0]}</p>{/if}
   </div>
   <div>
     <label for="passwordConfirm" class="block font-medium">Confirm password</label>
     <input id="passwordConfirm" name="passwordConfirm" type="password" autocomplete="new-password" required
-      aria-describedby="passwordConfirm-error"
+      aria-describedby={e.passwordConfirm ? 'passwordConfirm-error' : undefined}
+      aria-invalid={e.passwordConfirm ? 'true' : undefined}
       class="mt-1 block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2" />
     {#if e.passwordConfirm}<p id="passwordConfirm-error" class="mt-1 text-sm text-danger-fg">{e.passwordConfirm[0]}</p>{/if}
   </div>

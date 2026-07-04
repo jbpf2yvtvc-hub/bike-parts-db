@@ -113,8 +113,8 @@
 {/if}
 
 {#if data.incompatible.length}
-  <section class="mt-8" aria-labelledby="incompat">
-    <h2 id="incompat" class="mb-3 font-condensed text-lg font-semibold text-for-sale">
+  <section class="mt-8">
+    <h2 class="mb-3 font-condensed text-lg font-semibold text-for-sale">
       Incompatible with current configuration
     </h2>
     <p class="mb-3 text-sm text-ink-muted">

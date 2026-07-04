@@ -17,7 +17,9 @@
 <form method="POST" use:enhance class="space-y-4">
   <div>
     <label for="name" class="block font-medium">Name <span class="text-danger-fg">*</span></label>
-    <input id="name" name="name" required value={values.name ?? ''} aria-describedby="name-error" class={input} />
+    <input id="name" name="name" required value={values.name ?? ''}
+      aria-describedby={errors.name ? 'name-error' : undefined}
+      aria-invalid={errors.name ? 'true' : undefined} class={input} />
     {#if errors.name}<p id="name-error" class="mt-1 text-sm text-danger-fg">{errors.name}</p>{/if}
   </div>
   <div class="grid grid-cols-2 gap-4">

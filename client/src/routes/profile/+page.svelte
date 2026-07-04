@@ -11,9 +11,9 @@
 <h1 class="mb-6 font-display text-3xl tracking-wide text-accent">Profile</h1>
 
 {#if form?.success}
-  <p role="status" class="mb-4 rounded-md border border-keep/40 bg-keep/10 p-3 text-keep">
+  <output class="mb-4 block rounded-md border border-keep/40 bg-keep/10 p-3 text-keep">
     Profile saved.{#if form.emailChangeRequested} Check your new email to confirm the change.{/if}
-  </p>
+  </output>
 {/if}
 {#if form?.error}
   <p role="alert" class="mb-4 rounded-md border border-danger-fg/50 bg-danger-fg/10 p-3 text-danger-fg">{form.error}</p>
