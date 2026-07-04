@@ -8,9 +8,9 @@
 <h2 class="mb-4 text-xl font-semibold">Reset your password</h2>
 
 {#if form?.sent}
-  <p role="status" class="rounded-md border border-keep/40 bg-keep/10 p-3 text-keep">
+  <output class="block rounded-md border border-keep/40 bg-keep/10 p-3 text-keep">
     If that email is registered, a reset link is on its way. Check your inbox.
-  </p>
+  </output>
 {:else}
   {#if form?.error}
     <p role="alert" class="mb-4 rounded-md border border-danger-fg/50 bg-danger-fg/10 p-3 text-danger-fg">

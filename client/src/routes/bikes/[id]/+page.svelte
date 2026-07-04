@@ -42,8 +42,8 @@
   />
 </div>
 
-<section class="mt-8" aria-labelledby="on-bike">
-  <h2 id="on-bike" class="mb-3 font-condensed text-xl font-semibold">Parts on this bike ({data.parts.length})</h2>
+<section class="mt-8">
+  <h2 class="mb-3 font-condensed text-xl font-semibold">Parts on this bike ({data.parts.length})</h2>
   {#if data.parts.length}
     <div class="grid gap-3 sm:grid-cols-2">
       {#each data.parts as part (part.id)}

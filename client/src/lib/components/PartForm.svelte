@@ -182,7 +182,7 @@
           {#each bikes as b (b.id)}
             {@const count = counts[b.id] ?? 0}
             <label class="flex min-h-[44px] items-center justify-between gap-2">
-              <span>{b.name}</span>
+              <span>{b.name}<span class="sr-only"> — units of this part on this bike</span></span>
               <input
                 type="number"
                 inputmode="numeric"
@@ -192,7 +192,6 @@
                 step="1"
                 value={count}
                 onchange={(e) => setCount(b.id, Number(e.currentTarget.value))}
-                aria-label={`Units of this part on ${b.name}`}
                 class="w-20 min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2 text-right"
               />
             </label>

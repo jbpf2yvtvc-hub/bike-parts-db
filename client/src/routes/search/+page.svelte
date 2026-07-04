@@ -23,27 +23,30 @@
 
 <h1 class="mb-4 font-display text-3xl tracking-wide text-accent">Search</h1>
 
-<form method="GET" role="search" class="mb-6 flex gap-2">
-  <label for="q" class="sr-only">Search parts</label>
-  <input
-    id="q"
-    name="q"
-    type="search"
-    bind:value
-    oninput={onInput}
-    placeholder="Search by brand, model, attribute…"
-    autocomplete="off"
-    class="block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2"
-  />
-  <button type="submit" class="btn btn-primary">
-    <Search size={18} aria-hidden="true" /> Search
-  </button>
-</form>
+<search>
+  <form method="GET" class="mb-6 flex gap-2">
+    <label for="q" class="sr-only">Search parts</label>
+    <input
+      id="q"
+      name="q"
+      type="search"
+      bind:value
+      oninput={onInput}
+      placeholder="Search by brand, model, attribute…"
+      autocomplete="off"
+      class="block w-full min-h-[44px] rounded-md border border-border bg-surface-2 px-3 py-2"
+    />
+    <button type="submit" class="btn btn-primary">
+      <Search size={18} aria-hidden="true" /> Search
+    </button>
+  </form>
+</search>
 
-<!-- Announce result counts without moving focus (SC 4.1.3). -->
-<p role="status" aria-live="polite" class="mb-4 text-sm text-ink-muted">
+<!-- Announce result counts without moving focus (SC 4.1.3). <output> has an
+     implicit polite "status" role. -->
+<output class="mb-4 block text-sm text-ink-muted">
   {#if data.q}{data.results.length} result{data.results.length === 1 ? '' : 's'} for “{data.q}”{/if}
-</p>
+</output>
 
 {#if data.results.length}
   <div class="grid gap-3 sm:grid-cols-2">

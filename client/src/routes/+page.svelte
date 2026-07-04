@@ -33,8 +33,8 @@
 </div>
 
 {#if data.recentParts.length}
-  <section class="mt-8" aria-labelledby="recent-parts">
-    <h2 id="recent-parts" class="mb-3 font-condensed text-xl font-semibold">Recent parts</h2>
+  <section class="mt-8">
+    <h2 class="mb-3 font-condensed text-xl font-semibold">Recent parts</h2>
     <div class="grid gap-3 sm:grid-cols-2">
       {#each data.recentParts as part (part.id)}
         <PartCard {part} />
@@ -44,8 +44,8 @@
 {/if}
 
 {#if data.recentBikes.length}
-  <section class="mt-8" aria-labelledby="recent-bikes">
-    <h2 id="recent-bikes" class="mb-3 font-condensed text-xl font-semibold">Your bikes</h2>
+  <section class="mt-8">
+    <h2 class="mb-3 font-condensed text-xl font-semibold">Your bikes</h2>
     <div class="grid gap-3 sm:grid-cols-2">
       {#each data.recentBikes as bike (bike.id)}
         <BikeCard {bike} />

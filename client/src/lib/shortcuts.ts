@@ -58,7 +58,7 @@ export function isTypingTarget(target: EventTarget | null): boolean {
   if (el.isContentEditable) return true;
   if (
     el.closest?.(
-      '[contenteditable="true"], [role="combobox"], [role="menu"], [role="listbox"], [role="dialog"], [role="textbox"]'
+      'dialog, [contenteditable="true"], [role="combobox"], [role="menu"], [role="listbox"], [role="dialog"], [role="textbox"]'
     )
   ) {
     return true;

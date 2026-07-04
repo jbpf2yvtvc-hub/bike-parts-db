@@ -242,21 +242,12 @@
     </fieldset>
   </form>
 
-  <!-- Progress bar -->
+  <!-- Progress bar (native <progress>; the visible caption is its <label>) -->
   <div class="mt-3">
     <div class="mb-1 flex justify-between text-xs text-ink-muted">
-      <span>Progress</span><span>{done} / {total} ({pct}%)</span>
+      <label for="checklist-progress">Progress</label><span>{done} / {total} ({pct}%)</span>
     </div>
-    <div
-      class="h-2 w-full overflow-hidden rounded-full bg-surface-2"
-      role="progressbar"
-      aria-valuenow={pct}
-      aria-valuemin="0"
-      aria-valuemax="100"
-      aria-label="Checklist completion"
-    >
-      <div class="h-full bg-accent transition-[width]" style="width: {pct}%"></div>
-    </div>
+    <progress id="checklist-progress" value={pct} max="100" class="block h-2 w-full">{pct}%</progress>
   </div>
 </div>
 
@@ -272,7 +263,7 @@
 
 <!-- View filter: All / Installed / Needed (§9 update). No-JS: links reload
      with ?view=…; JS: filters in place. -->
-<div class="mt-6 inline-flex rounded-md border border-border bg-surface p-1" role="group" aria-label="Filter checklist items">
+<nav class="mt-6 inline-flex rounded-md border border-border bg-surface p-1" aria-label="Checklist filter">
   {#each FILTERS as f (f.value)}
     {@const count = f.value === 'all' ? total : f.value === 'installed' ? done : total - done}
     <a
@@ -286,7 +277,7 @@
       {f.label} <span class="opacity-70">({count})</span>
     </a>
   {/each}
-</div>
+</nav>
 
 <!-- The checklist itself is one form so it works with no JS (Save button). -->
 <form method="POST" action="?/saveChecks" class="mt-4 space-y-4">
@@ -490,3 +481,24 @@
 <p class="mt-8 text-sm text-ink-muted">
   Missing a part? <a href="/parts/new" class="text-accent underline inline-flex items-center gap-1"><Plus size={14} aria-hidden="true" /> Add a part</a>
 </p>
+
+<style>
+  /* Restyle the native <progress> to match the old div-based bar. */
+  progress {
+    appearance: none;
+    border: none; /* Firefox draws a default border */
+    border-radius: 9999px;
+    overflow: hidden;
+    background-color: var(--color-surface-2);
+  }
+  progress::-webkit-progress-bar {
+    background-color: var(--color-surface-2);
+  }
+  progress::-webkit-progress-value {
+    background-color: var(--color-accent);
+    transition: width 0.15s;
+  }
+  progress::-moz-progress-bar {
+    background-color: var(--color-accent);
+  }
+</style>
