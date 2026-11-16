@@ -171,7 +171,7 @@
 </nav>
 
 <header class="mb-2">
-  <h1 class="font-display text-4xl tracking-wide text-accent">Build checklist</h1>
+  <h1 class="font-display text-3xl tracking-wide text-accent">Build checklist</h1>
   <p class="font-condensed text-lg text-ink-muted">{data.bike.name} — {subtitle}</p>
   <a href="#notes" class="mt-1 inline-flex items-center gap-1 text-sm text-accent underline">
     <StickyNote size={14} aria-hidden="true" /> Build notes
