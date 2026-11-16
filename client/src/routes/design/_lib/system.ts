@@ -90,7 +90,8 @@ export interface TypeStep {
 
 export const typeScale: TypeStep[] = [
   { name: 'Display', usage: 'Brand mark', cls: 'font-display text-2xl font-semibold uppercase tracking-wide', spec: 'Montserrat · 1.5rem/24px · 600 · UPPERCASE · +0.03em' },
-  { name: 'Heading 1', usage: 'Page titles', cls: 'font-display text-2xl font-semibold uppercase', spec: 'Montserrat · 1.5rem/24px · 600 · UPPERCASE' },
+  { name: 'Heading 1', usage: 'Page titles', cls: 'font-display text-3xl font-semibold uppercase tracking-wide text-accent', spec: 'Montserrat · 1.875rem/30px · 600 · UPPERCASE · +0.03em · accent' },
+  { name: 'Detail title', usage: 'Part / bike name on its detail page', cls: 'font-condensed text-2xl font-bold heading-cased', spec: 'Montserrat · 1.5rem/24px · 700 · as entered (.heading-cased)' },
   { name: 'Heading 2', usage: 'Section titles', cls: 'font-display text-xl font-semibold uppercase', spec: 'Montserrat · 1.25rem/20px · 600 · UPPERCASE' },
   { name: 'Heading 3', usage: 'Card titles', cls: 'font-condensed text-lg font-semibold uppercase', spec: 'Montserrat · 1.125rem/18px · 600 · UPPERCASE' },
   { name: 'Body', usage: 'Default copy', cls: 'text-base', spec: 'system-ui · 1rem/16px · 400' },
